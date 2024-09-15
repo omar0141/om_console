@@ -127,22 +127,22 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               consoleTab(text: "All Console"),
-                              SizedBox(width: 15),
+                              const SizedBox(width: 15),
                               consoleTab(
                                 text: "Normal",
                                 logType: LogType.normal,
                               ),
-                              SizedBox(width: 15),
+                              const SizedBox(width: 15),
                               consoleTab(
                                 text: "Http",
                                 logType: LogType.http,
                               ),
-                              SizedBox(width: 15),
+                              const SizedBox(width: 15),
                               consoleTab(
                                 text: "Error",
                                 logType: LogType.error,
                               ),
-                              SizedBox(width: 15),
+                              const SizedBox(width: 15),
                               consoleTab(
                                 text: "Logs",
                                 logType: LogType.logs,
@@ -155,12 +155,12 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                                       width: 250,
                                       child: TextField(
                                         controller: OmConsole.searchConroller,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 13,
                                           color: Colors.white,
                                         ),
                                         onChanged: OmConsole.search,
-                                        decoration: InputDecoration(
+                                        decoration: const InputDecoration(
                                             fillColor: Color.fromARGB(
                                                 255, 117, 117, 117),
                                             filled: true,
@@ -303,7 +303,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                       setState(() {});
                     },
                     child: Container(
-                      padding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: const Color.fromARGB(255, 65, 65, 65),
                         borderRadius: BorderRadius.circular(5),
@@ -329,7 +329,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: log.backgroundColor,
-        border: Border(
+        border: const Border(
           top: BorderSide(width: 1),
           bottom: BorderSide(width: 1),
         ),
@@ -343,7 +343,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 TextSpan(children: [
                   TextSpan(
                     text: "${log.statusCode}  ",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Color.fromARGB(255, 21, 105, 0),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -351,13 +351,13 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   ),
                   TextSpan(
                     text: "${log.method} ",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.purple,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  TextSpan(
+                  const TextSpan(
                     text: "(",
                     style: TextStyle(
                       color: Colors.black,
@@ -367,14 +367,14 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   ),
                   TextSpan(
                     text: "${log.url})",
-                    style: TextStyle(
-                        color: const Color.fromARGB(255, 81, 132, 173),
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 81, 132, 173),
                         fontSize: 14),
                   ),
                 ]),
                 style: TextStyle(color: log.textColor, fontSize: 14),
               ),
-              Divider(color: Colors.black, thickness: 0.2),
+              const Divider(color: Colors.black, thickness: 0.2),
               Row(
                 children: [
                   Expanded(
@@ -386,14 +386,14 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   Expanded(
                     child: Text.rich(
                       TextSpan(children: [
-                        TextSpan(
+                        const TextSpan(
                           text: "Body: ",
                         ),
                         TextSpan(
-                          text: "${log.body}",
+                          text: log.body,
                         ),
                       ]),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color.fromARGB(255, 85, 83, 0),
                         fontSize: 14,
                         fontWeight: FontWeight.normal,
@@ -402,7 +402,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   ),
                 ],
               ),
-              Divider(color: Colors.black, thickness: 0.2),
+              const Divider(color: Colors.black, thickness: 0.2),
               StatefulBuilder(builder: (context, responseSetState) {
                 return GestureDetector(
                   onTap: () {
@@ -450,7 +450,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
       child: GestureDetector(
         onTap: () {
           selectTag(logType);
-          if (!expandedConsole || OmConsole.logTypes.length > 0) {
+          if (!expandedConsole || OmConsole.logTypes.isNotEmpty) {
             openConsole();
           } else {
             OmConsole.logTypes.clear();
@@ -470,7 +470,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
               : null,
           child: Text(
             text,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ),
@@ -522,12 +522,12 @@ class _CopyWidgetState extends State<CopyWidget> {
       width: 50,
       child: StatefulBuilder(builder: (context, setStateCopy) {
         return InkWell(
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
           onTap: () async {
             await Clipboard.setData(ClipboardData(text: widget.text));
             setStateCopy(() {
               copied = true;
-              _timer = Timer(Duration(seconds: 3), () {
+              _timer = Timer(const Duration(seconds: 3), () {
                 setStateCopy(() {
                   copied = false;
                 });
