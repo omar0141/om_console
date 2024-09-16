@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:om_console/om_console.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'om_console.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'substring_higlight.dart';
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -33,8 +35,8 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
   double consoleHeight = 30;
   double _lastConsoleHeight = 300;
   bool expandedConsole = false;
-  final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0.0;
+  // final ScrollController _scrollController = ScrollController();
+  // double _scrollOffset = 0.0;
   bool scrollToBottom = true;
   bool copied = false;
   bool multiFilter = false;
@@ -47,36 +49,9 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
   }
 
   @override
-  void initState() {
-    _scrollController.addListener(() {
-      if (_scrollController.position.userScrollDirection ==
-          ScrollDirection.reverse) {
-        if (_scrollController.position.atEdge) {
-          scrollToBottom = false;
-        }
-        setState(() {});
-      } else if (_scrollController.position.userScrollDirection ==
-          ScrollDirection.forward) {
-        if (!_scrollController.position.atEdge) {
-          scrollToBottom = true;
-        }
-        setState(() {});
-      }
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(() {});
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    screenHeight = (screenHeight! <= (orgScreenHeight! / 3))
-        ? (orgScreenHeight! / 3)
+    screenHeight = (screenHeight! <= (orgScreenHeight! / 2))
+        ? (orgScreenHeight! / 2)
         : screenHeight;
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -159,7 +134,12 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                                           fontSize: 13,
                                           color: Colors.white,
                                         ),
-                                        onChanged: OmConsole.search,
+                                        onChanged: (e) {
+                                          OmConsole.currentSearchScrollIndex =
+                                              0;
+                                          OmConsole.searchPaging();
+                                          setState(() {});
+                                        },
                                         decoration: const InputDecoration(
                                             fillColor: Color.fromARGB(
                                                 255, 117, 117, 117),
@@ -171,6 +151,37 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                                             hintStyle: TextStyle(
                                                 color: Color.fromARGB(
                                                     255, 199, 199, 199))),
+                                      ),
+                                    ),
+                                    MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          OmConsole.searchPaging(back: true);
+                                          setState(() {});
+                                        },
+                                        child: const Icon(
+                                          Icons.arrow_upward,
+                                          size: 20,
+                                          color: Color.fromARGB(
+                                              255, 197, 197, 197),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          OmConsole.searchPaging(forward: true);
+                                          setState(() {});
+                                        },
+                                        child: const Icon(
+                                          Icons.arrow_downward,
+                                          size: 20,
+                                          color: Color.fromARGB(
+                                              255, 197, 197, 197),
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -214,34 +225,20 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                               valueListenable: OmConsole.logs,
                               builder: (BuildContext context, List<Log> value,
                                   child) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  if (!_scrollController.position.atEdge) {
-                                    scrollToBottom = true;
-                                    setState(() {});
-                                  }
-                                });
-
+                                // scrollToBottom = true;
                                 return Padding(
                                   padding: const EdgeInsetsDirectional.only(
                                       start: 10),
-                                  child: ListView.builder(
-                                    controller: _scrollController,
+                                  child: ScrollablePositionedList.builder(
+                                    itemScrollController:
+                                        OmConsole.itemScrollController,
                                     itemCount: value.length,
                                     itemBuilder: (context, i) {
                                       Log log = value[i];
                                       if (log.type == LogType.http) {
                                         return httpWidget(log);
                                       } else {
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 2),
-                                          child: Text(
-                                            log.message,
-                                            style:
-                                                TextStyle(color: log.textColor),
-                                          ),
-                                        );
+                                        return normalTextWidget(log);
                                       }
                                     },
                                   ),
@@ -265,7 +262,10 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 onVerticalDragUpdate: (details) {
                   setState(() {
                     consoleHeight = (consoleHeight - details.primaryDelta!)
-                        .clamp(30, MediaQuery.of(context).size.height - 50);
+                        .clamp(
+                            30,
+                            MediaQuery.of(context).size.height -
+                                _lastConsoleHeight);
                     screenHeight = (orgScreenHeight ?? 0) -
                         consoleHeight +
                         orgConsoleHeight;
@@ -292,12 +292,18 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   child: GestureDetector(
                     onTap: () {
                       if (scrollToBottom) {
-                        _scrollController
-                            .jumpTo(_scrollController.position.maxScrollExtent);
+                        OmConsole.itemScrollController.scrollTo(
+                          index: OmConsole.logs.value.length - 1,
+                          duration: const Duration(milliseconds: 100),
+                        );
                         scrollToBottom = false;
                       } else {
-                        _scrollController
-                            .jumpTo(_scrollController.position.minScrollExtent);
+                        if (OmConsole.logs.value.isNotEmpty) {
+                          OmConsole.itemScrollController.scrollTo(
+                            index: 0,
+                            duration: const Duration(milliseconds: 100),
+                          );
+                        }
                         scrollToBottom = true;
                       }
                       setState(() {});
@@ -319,6 +325,27 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   ),
                 ))
         ],
+      ),
+    );
+  }
+
+  Padding normalTextWidget(Log log) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: SubstringHighlight(
+        text: log.message,
+        term: OmConsole.searchConroller.text,
+        textStyleHighlight: const TextStyle(
+          backgroundColor: Color.fromARGB(139, 0, 140, 255),
+          fontSize: 17,
+          fontWeight: FontWeight.normal,
+        ),
+        textStyle: TextStyle(
+          color: log.textColor,
+          backgroundColor: OmConsole.currentSearch?.id == log.id
+              ? const Color.fromARGB(255, 128, 180, 129)
+              : null,
+        ),
       ),
     );
   }
@@ -368,8 +395,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   TextSpan(
                     text: "${log.url})",
                     style: const TextStyle(
-                        color: Color.fromARGB(255, 81, 132, 173),
-                        fontSize: 14),
+                        color: Color.fromARGB(255, 81, 132, 173), fontSize: 14),
                   ),
                 ]),
                 style: TextStyle(color: log.textColor, fontSize: 14),
@@ -482,14 +508,10 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
     consoleHeight = _lastConsoleHeight;
     screenHeight = (orgScreenHeight ?? 0) - consoleHeight + orgConsoleHeight;
     OmConsole.filterWithTags(OmConsole.searchConroller.text);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(_scrollOffset);
-    });
     setState(() {});
   }
 
   void closeConsole() {
-    _scrollOffset = _scrollController.offset;
     expandedConsole = false;
     consoleHeight = orgConsoleHeight;
     screenHeight = orgScreenHeight;
