@@ -18,9 +18,10 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 
 // ignore: must_be_immutable
 class ConsoleWrapper extends StatefulWidget {
-  ConsoleWrapper({super.key, required this.child});
+  ConsoleWrapper({super.key, required this.child, this.showConsole = true});
 
   Widget child;
+  final bool showConsole;
 
   @override
   State<ConsoleWrapper> createState() => _ConsoleWrapperState();
@@ -53,6 +54,9 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
     screenHeight = (screenHeight! <= (orgScreenHeight! / 2))
         ? (orgScreenHeight! / 2)
         : screenHeight;
+    if (!widget.showConsole) {
+      return widget.child;
+    }
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Stack(
@@ -153,6 +157,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                                                     255, 199, 199, 199))),
                                       ),
                                     ),
+                                    const SizedBox(width: 5),
                                     MouseRegion(
                                       cursor: SystemMouseCursors.click,
                                       child: GestureDetector(
