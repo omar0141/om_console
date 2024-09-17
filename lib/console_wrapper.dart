@@ -55,6 +55,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
         ? (orgScreenHeight! / 2)
         : screenHeight;
     if (!widget.showConsole) {
+      OmConsole.clear();
       return widget.child;
     }
     return Directionality(
@@ -68,6 +69,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 child: widget.child,
               ),
               MaterialApp(
+                navigatorKey: OmConsole.navigatorKey,
                 debugShowCheckedModeBanner: false,
                 theme: ThemeData(
                   scrollbarTheme: ScrollbarThemeData(
@@ -230,7 +232,6 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                               valueListenable: OmConsole.logs,
                               builder: (BuildContext context, List<Log> value,
                                   child) {
-                                // scrollToBottom = true;
                                 return Padding(
                                   padding: const EdgeInsetsDirectional.only(
                                       start: 10),
@@ -342,10 +343,11 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
         term: OmConsole.searchConroller.text,
         textStyleHighlight: const TextStyle(
           backgroundColor: Color.fromARGB(139, 0, 140, 255),
-          fontSize: 17,
+          fontSize: 16,
           fontWeight: FontWeight.normal,
         ),
         textStyle: TextStyle(
+          fontSize: 16,
           color: log.textColor,
           backgroundColor: OmConsole.currentSearch?.id == log.id
               ? const Color.fromARGB(255, 128, 180, 129)
@@ -374,7 +376,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
               Text.rich(
                 TextSpan(children: [
                   TextSpan(
-                    text: "${log.statusCode}  ",
+                    text: "${log.id} ${log.statusCode}  ",
                     style: const TextStyle(
                       color: Color.fromARGB(255, 21, 105, 0),
                       fontSize: 14,
