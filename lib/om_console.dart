@@ -19,9 +19,14 @@ class Console {
           textColor: textColor,
           id: lastId,
         );
-        OmConsole.logs.value.add(logData);
         OmConsole.orgLogs.add(logData);
+        OmConsole.logs.value.add(logData);
+        if (type != LogType.error) {
+          OmConsole.limitTotalLines(200,
+              textStyle: const TextStyle(fontSize: 16));
+        }
         OmConsole.filterWithTags(OmConsole.searchConroller.text);
+        
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
       } catch (e) {
@@ -47,7 +52,7 @@ class Console {
         String prettyResponse =
             const JsonEncoder.withIndent('  ').convert(response);
         Log logHttp = Log(
-          "$url $method $headers $body $statusCode $response",
+          "",
           url: url,
           method: method,
           headers: const JsonEncoder.withIndent('  ').convert(headers),
@@ -61,8 +66,9 @@ class Console {
           curlCommand:
               OmConsole.generateCurlCommandWithJson(url, headers, body),
         );
-        OmConsole.logs.value.add(logHttp);
         OmConsole.orgLogs.add(logHttp);
+        OmConsole.logs.value.add(logHttp);
+        
         OmConsole.filterWithTags(OmConsole.searchConroller.text);
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
@@ -96,7 +102,7 @@ class Console {
 }
 
 class OmConsole {
-  static final List<Log> orgLogs = [];
+  static List<Log> orgLogs = [];
   static final ValueNotifier<List<Log>> logs = ValueNotifier<List<Log>>([]);
   static List<LogType?> logTypes = [];
   static TextEditingController searchConroller = TextEditingController();
@@ -104,9 +110,11 @@ class OmConsole {
   static Log? currentSearch;
   static final ItemScrollController itemScrollController =
       ItemScrollController();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   static void clear() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         for (var log in logs.value) {
           orgLogs.removeWhere((e) => e.id == log.id);
@@ -118,7 +126,7 @@ class OmConsole {
       } catch (e) {
         print(e.toString());
       }
-    });
+    // });
   }
 
   static void searchPaging({
@@ -232,6 +240,56 @@ class OmConsole {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+static void limitTotalLines(int maxLines, {required TextStyle textStyle}) {
+    List<Log> limitedLogs = [];
+    int totalLines = 0;
+    double maxWidth =
+        MediaQuery.of(navigatorKey.currentContext!).size.width - 20;
+
+    // Start from the latest logs and go backwards to keep the most recent logs
+    for (int i = orgLogs.length - 1; i >= 0; i--) {
+      Log log = orgLogs[i];
+
+      final textSpan = TextSpan(text: log.message, style: textStyle);
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+        maxLines: null, // Allow unlimited lines to calculate full height
+      );
+      textPainter.layout(maxWidth: maxWidth);
+
+      final singleLineHeight = textPainter.preferredLineHeight;
+      final logLines = (textPainter.height / singleLineHeight).ceil();
+
+      if (totalLines + logLines > maxLines) {
+        break; // Stop when exceeding the max line limit
+      }
+
+      limitedLogs.insert(0, log); // Insert at the start to maintain order
+      totalLines += logLines;
+    }
+
+    // If total lines exceed maxLines, remove excess logs from the beginning
+    while (totalLines > maxLines && limitedLogs.isNotEmpty) {
+      Log removedLog = limitedLogs.removeAt(0); // Remove from the beginning
+
+      final removedTextSpan =
+          TextSpan(text: removedLog.message, style: textStyle);
+      final removedTextPainter = TextPainter(
+        text: removedTextSpan,
+        textDirection: TextDirection.ltr,
+        maxLines: null,
+      );
+      removedTextPainter.layout(maxWidth: maxWidth);
+      final removedLines =
+          (removedTextPainter.height / removedTextPainter.preferredLineHeight)
+              .ceil();
+      totalLines -= removedLines;
+    }
+
+    orgLogs = limitedLogs;
   }
 }
 
