@@ -6,19 +6,11 @@ Om Console is a live console for Flutter that enables viewing UI prints and HTTP
 
 ## Screenshots
 
-## 1.
-
 ![Om Console Screenshot 1](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot1.jpg)
-
-## 2.
 
 ![Om Console Screenshot 2](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot2.png)
 
-## 3.
-
 ![Om Console Screenshot 3](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot3.png)
-
-## 4.
 
 ![Om Console Screenshot 4](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot4.png)
 
@@ -76,6 +68,8 @@ Use the `Console.log` method for custom logging:
 Console.log("Your Message or Your object", type: LogType.logs, color: Colors.amber)
 ```
 
+**Note:** You don't need to replace all your prints to make them show in the console. Any app prints or logs will go by default under the normal type tab in the console. Use `Console.log` only when you want to customize the logs.
+
 #### Available LogTypes:
 
 - normal
@@ -113,7 +107,7 @@ The `ConsoleWrapper` widget supports the following properties:
 
 - The console is currently optimized for wide screens. Mobile screen support is in development.
 - HTTP requests can only be copied as raw data. Support for copying as form data is planned for future releases.
-- Search in http requests still under development.
+- Search functionality in HTTP requests is still under development.
 
 ## Contributing
 

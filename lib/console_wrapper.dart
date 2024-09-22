@@ -54,19 +54,23 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 
   @override
   void initState() {
-    OmConsole.itemPositionsListener.itemPositions.addListener(() {
-      if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
-          (OmConsole.logs.value.length - 1)) {
-        setState(() {
-          scrollToBottom = false;
-        });
-        Future.microtask(() => scrollToBottom = false);
-      } else {
-        setState(() {
-          scrollToBottom = true;
-        });
-        Future.microtask(() => scrollToBottom = true);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OmConsole.itemPositionsListener.itemPositions.addListener(() {
+        try {
+          if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
+              (OmConsole.logs.value.length - 1)) {
+            setState(() {
+              scrollToBottom = false;
+            });
+            Future.microtask(() => scrollToBottom = false);
+          } else {
+            setState(() {
+              scrollToBottom = true;
+            });
+            Future.microtask(() => scrollToBottom = true);
+          }
+        } catch (e) {}
+      });
     });
     super.initState();
   }
