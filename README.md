@@ -8,19 +8,19 @@ Om Console is a live console for Flutter that enables viewing UI prints and HTTP
 
 ## 1.
 
-![Om Console Screenshot 1](./Screenshot1.jpg)
+![Om Console Screenshot 1](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot1.jpg)
 
 ## 2.
 
-![Om Console Screenshot 2](./Screenshot2.png)
+![Om Console Screenshot 2](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot2.png)
 
 ## 3.
 
-![Om Console Screenshot 3](./Screenshot3.png)
+![Om Console Screenshot 3](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot3.png)
 
 ## 4.
 
-![Om Console Screenshot 4](./Screenshot4.png)
+![Om Console Screenshot 4](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot4.png)
 
 ## Installation
 
