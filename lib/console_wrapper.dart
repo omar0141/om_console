@@ -398,7 +398,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
               Text.rich(
                 TextSpan(children: [
                   TextSpan(
-                    text: "${log.id} ${log.statusCode}  ",
+                    text: "${log.statusCode}  ",
                     style: const TextStyle(
                       color: Color.fromARGB(255, 21, 105, 0),
                       fontSize: 14,
