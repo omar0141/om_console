@@ -69,7 +69,9 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
             });
             Future.microtask(() => scrollToBottom = true);
           }
-        } catch (e) {}
+        } catch (e) {
+          // here is an error
+        }
       });
     });
     super.initState();
