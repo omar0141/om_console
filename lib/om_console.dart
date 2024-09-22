@@ -9,6 +9,7 @@ class Console {
     LogType type = LogType.normal,
     Color textColor = Colors.white,
   }) {
+    if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         int lastId =
@@ -22,11 +23,10 @@ class Console {
         OmConsole.orgLogs.add(logData);
         OmConsole.logs.value.add(logData);
         if (type != LogType.error) {
-          OmConsole.limitTotalLines(200,
-              textStyle: const TextStyle(fontSize: 16));
+          OmConsole.limitTotalLines(textStyle: const TextStyle(fontSize: 16));
         }
         OmConsole.filterWithTags(OmConsole.searchConroller.text);
-        
+
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
       } catch (e) {
@@ -45,6 +45,7 @@ class Console {
     required int statusCode,
     required Map<String, dynamic> response,
   }) {
+    if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
         int lastId =
@@ -68,7 +69,7 @@ class Console {
         );
         OmConsole.orgLogs.add(logHttp);
         OmConsole.logs.value.add(logHttp);
-        
+
         OmConsole.filterWithTags(OmConsole.searchConroller.text);
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
@@ -108,25 +109,27 @@ class OmConsole {
   static TextEditingController searchConroller = TextEditingController();
   static int currentSearchScrollIndex = 0;
   static Log? currentSearch;
+  static bool showConsole = true;
+  static int maxLines = 200;
   static final ItemScrollController itemScrollController =
       ItemScrollController();
+  static ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
   static void clear() {
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        for (var log in logs.value) {
-          orgLogs.removeWhere((e) => e.id == log.id);
-        }
-        logs.value.clear();
-
-        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-        logs.notifyListeners();
-      } catch (e) {
-        print(e.toString());
+    try {
+      for (var log in logs.value) {
+        orgLogs.removeWhere((e) => e.id == log.id);
       }
-    // });
+      logs.value.clear();
+      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+      logs.notifyListeners();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   static void searchPaging({
@@ -214,7 +217,6 @@ class OmConsole {
     try {
       currentSearchScrollIndex = 0;
       if (logTypes.isEmpty || logTypes.contains(null)) {
-        // logs.value.clear();
         logs.value = orgLogs
             .map((e) => Log(
                   e.message,
@@ -242,7 +244,7 @@ class OmConsole {
     }
   }
 
-static void limitTotalLines(int maxLines, {required TextStyle textStyle}) {
+  static void limitTotalLines({required TextStyle textStyle}) {
     List<Log> limitedLogs = [];
     int totalLines = 0;
     double maxWidth =
