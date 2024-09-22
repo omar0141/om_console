@@ -5,7 +5,7 @@ final int __int64MaxValue = double.maxFinite.toInt();
 /// Widget that renders a string with sub-string highlighting.
 class SubstringHighlight extends StatelessWidget {
   const SubstringHighlight(
-      {super.key,
+      {Key? key,
       this.caseSensitive = false,
       this.maxLines,
       this.overflow = TextOverflow.clip,
@@ -24,7 +24,8 @@ class SubstringHighlight extends StatelessWidget {
           false // default is to match substrings (hence the package name!)
 
       })
-      : assert(term != null || terms != null);
+      : assert(term != null || terms != null),
+        super(key: key);
 
   /// By default the search terms are case insensitive.  Pass false to force case sensitive matches.
   final bool caseSensitive;
