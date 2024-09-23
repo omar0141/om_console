@@ -19,11 +19,11 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 // ignore: must_be_immutable
 class ConsoleWrapper extends StatefulWidget {
   ConsoleWrapper({
-    Key? key,
+    super.key,
     required this.child,
     this.showConsole = true,
     this.maxLines = 200,
-  }) : super(key: key);
+  });
 
   Widget child;
   final bool showConsole;
@@ -54,25 +54,23 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      OmConsole.itemPositionsListener.itemPositions.addListener(() {
-        try {
-          if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
-              (OmConsole.logs.value.length - 1)) {
-            setState(() {
-              scrollToBottom = false;
-            });
-            Future.microtask(() => scrollToBottom = false);
-          } else {
-            setState(() {
-              scrollToBottom = true;
-            });
-            Future.microtask(() => scrollToBottom = true);
-          }
-        } catch (e) {
-          // here is an error
+    OmConsole.itemPositionsListener.itemPositions.addListener(() {
+      try {
+        if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
+            (OmConsole.logs.value.length - 1)) {
+          setState(() {
+            scrollToBottom = false;
+          });
+          Future.microtask(() => scrollToBottom = false);
+        } else {
+          setState(() {
+            scrollToBottom = true;
+          });
+          Future.microtask(() => scrollToBottom = true);
         }
-      });
+      } catch (e) {
+        // your error message
+      }
     });
     super.initState();
   }
@@ -401,61 +399,82 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                    text: "${log.statusCode}  ",
-                    style: const TextStyle(
+              Row(
+                children: [
+                  SubstringHighlight(
+                    text: "${log.statusCode}",
+                    term: OmConsole.searchConroller.text,
+                    textStyle: const TextStyle(
                       color: Color.fromARGB(255, 21, 105, 0),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
+                    textStyleHighlight: const TextStyle(
+                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
                   ),
-                  TextSpan(
-                    text: "${log.method} ",
-                    style: const TextStyle(
+                  SubstringHighlight(
+                    text: " ${log.method} ",
+                    term: OmConsole.searchConroller.text,
+                    textStyle: const TextStyle(
                       color: Colors.purple,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
-                  ),
-                  const TextSpan(
-                    text: "(",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    textStyleHighlight: const TextStyle(
+                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
-                  TextSpan(
-                    text: "${log.url})",
-                    style: const TextStyle(
-                        color: Color.fromARGB(255, 81, 132, 173), fontSize: 14),
+                  SubstringHighlight(
+                    text: "(${log.url})",
+                    term: OmConsole.searchConroller.text,
+                    textStyle: const TextStyle(
+                      color: Color.fromARGB(255, 81, 132, 173),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textStyleHighlight: const TextStyle(
+                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
                   ),
-                ]),
-                style: TextStyle(color: log.textColor, fontSize: 14),
+                ],
               ),
               const Divider(color: Colors.black, thickness: 0.2),
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      "Headers: ${log.headers}",
-                      style: TextStyle(color: log.textColor, fontSize: 12),
+                    child: SubstringHighlight(
+                      text: "Body: ${log.headers}",
+                      term: OmConsole.searchConroller.text,
+                      textStyle: TextStyle(
+                        color: log.textColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textStyleHighlight: const TextStyle(
+                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
                   ),
                   Expanded(
-                    child: Text.rich(
-                      TextSpan(children: [
-                        const TextSpan(
-                          text: "Body: ",
-                        ),
-                        TextSpan(
-                          text: log.body,
-                        ),
-                      ]),
-                      style: const TextStyle(
-                        color: Color.fromARGB(255, 85, 83, 0),
+                    child: SubstringHighlight(
+                      text: "Headers: ${log.headers}",
+                      term: OmConsole.searchConroller.text,
+                      textStyle: TextStyle(
+                        color: log.textColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textStyleHighlight: const TextStyle(
+                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
                         fontSize: 14,
                         fontWeight: FontWeight.normal,
                       ),
@@ -466,17 +485,26 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
               const Divider(color: Colors.black, thickness: 0.2),
               StatefulBuilder(builder: (context, responseSetState) {
                 return GestureDetector(
-                  onTap: () {
-                    log.expandRes = !log.expandRes;
-                    responseSetState(() {});
-                  },
-                  child: Text(
-                    "Response: ${log.response}",
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: log.expandRes ? null : 3,
-                    style: TextStyle(color: log.textColor, fontSize: 12),
-                  ),
-                );
+                    onTap: () {
+                      log.expandRes = !log.expandRes;
+                      responseSetState(() {});
+                    },
+                    child: SubstringHighlight(
+                      text: "Response: ${log.response}",
+                      term: OmConsole.searchConroller.text,
+                      maxLines: log.expandRes ? null : 3,
+                      overflow: TextOverflow.ellipsis,
+                      textStyle: TextStyle(
+                        color: log.textColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textStyleHighlight: const TextStyle(
+                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ));
               }),
             ],
           ),
@@ -555,7 +583,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 }
 
 class CopyWidget extends StatefulWidget {
-  const CopyWidget({Key? key, required this.text}) : super(key: key);
+  const CopyWidget({super.key, required this.text});
 
   final String text;
 
