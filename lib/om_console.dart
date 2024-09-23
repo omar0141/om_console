@@ -264,32 +264,72 @@ class OmConsole {
     double maxWidth =
         MediaQuery.of(navigatorKey.currentContext!).size.width - 20;
 
-    // Start from the latest logs and go backwards to keep the most recent logs
+    // First pass: Add all HTTP logs
     for (int i = orgLogs.length - 1; i >= 0; i--) {
       Log log = orgLogs[i];
+      if (log.type == LogType.http) {
+        final textSpan = TextSpan(text: log.message, style: textStyle);
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+          maxLines: null,
+        );
+        textPainter.layout(maxWidth: maxWidth);
+        final logLines =
+            (textPainter.height / textPainter.preferredLineHeight).ceil();
 
-      final textSpan = TextSpan(text: log.message, style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-        maxLines: null, // Allow unlimited lines to calculate full height
-      );
-      textPainter.layout(maxWidth: maxWidth);
-
-      final singleLineHeight = textPainter.preferredLineHeight;
-      final logLines = (textPainter.height / singleLineHeight).ceil();
-
-      if (totalLines + logLines > maxLines) {
-        break; // Stop when exceeding the max line limit
+        limitedLogs.insert(0, log);
+        totalLines += logLines;
       }
-
-      limitedLogs.insert(0, log); // Insert at the start to maintain order
-      totalLines += logLines;
     }
 
-    // If total lines exceed maxLines, remove excess logs from the beginning
+    // Second pass: Add non-HTTP logs until maxLines is reached
+    for (int i = orgLogs.length - 1; i >= 0; i--) {
+      Log log = orgLogs[i];
+      if (log.type != LogType.http) {
+        final textSpan = TextSpan(text: log.message, style: textStyle);
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+          maxLines: null,
+        );
+        textPainter.layout(maxWidth: maxWidth);
+        final logLines =
+            (textPainter.height / textPainter.preferredLineHeight).ceil();
+
+        if (totalLines + logLines > maxLines) {
+          break; // Stop when exceeding the max line limit
+        }
+
+        limitedLogs.insert(0, log);
+        totalLines += logLines;
+      }
+    }
+
+    // If we're still over maxLines, start removing non-HTTP logs
+    while (totalLines > maxLines &&
+        limitedLogs.any((log) => log.type != LogType.http)) {
+      int indexToRemove =
+          limitedLogs.indexWhere((log) => log.type != LogType.http);
+      Log removedLog = limitedLogs.removeAt(indexToRemove);
+
+      final removedTextSpan =
+          TextSpan(text: removedLog.message, style: textStyle);
+      final removedTextPainter = TextPainter(
+        text: removedTextSpan,
+        textDirection: TextDirection.ltr,
+        maxLines: null,
+      );
+      removedTextPainter.layout(maxWidth: maxWidth);
+      final removedLines =
+          (removedTextPainter.height / removedTextPainter.preferredLineHeight)
+              .ceil();
+      totalLines -= removedLines;
+    }
+
+    // If we're still over maxLines, start removing HTTP logs from the oldest
     while (totalLines > maxLines && limitedLogs.isNotEmpty) {
-      Log removedLog = limitedLogs.removeAt(0); // Remove from the beginning
+      Log removedLog = limitedLogs.removeAt(0);
 
       final removedTextSpan =
           TextSpan(text: removedLog.message, style: textStyle);
