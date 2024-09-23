@@ -19,11 +19,11 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 // ignore: must_be_immutable
 class ConsoleWrapper extends StatefulWidget {
   ConsoleWrapper({
-    super.key,
+    Key? key,
     required this.child,
     this.showConsole = true,
     this.maxLines = 200,
-  });
+  }) : super(key: key);
 
   Widget child;
   final bool showConsole;
@@ -583,7 +583,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 }
 
 class CopyWidget extends StatefulWidget {
-  const CopyWidget({super.key, required this.text});
+  const CopyWidget({Key? key, required this.text}) : super(key: key);
 
   final String text;
 
