@@ -52,6 +52,9 @@ class Console {
             (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
         String prettyResponse =
             const JsonEncoder.withIndent('  ').convert(response);
+        if (prettyResponse.length > 300) {
+          prettyResponse = prettyResponse.substring(0, 300);
+        }
         Log logHttp = Log(
           "",
           url: url,
@@ -142,10 +145,21 @@ class OmConsole {
       if (text.isEmpty) {
         searchLogs = [];
       } else {
-        searchLogs = logs.value
-            .where(
-                (log) => log.message.toLowerCase().contains(text.toLowerCase()))
-            .toList();
+        searchLogs = logs.value.where((log) {
+          if (log.type == LogType.http) {
+            return log.statusCode
+                    .toString()
+                    .toLowerCase()
+                    .contains(text.toLowerCase()) ||
+                log.url.toLowerCase().contains(text.toLowerCase()) ||
+                log.method.toLowerCase().contains(text.toLowerCase()) ||
+                log.headers.toLowerCase().contains(text.toLowerCase()) ||
+                log.body.toLowerCase().contains(text.toLowerCase()) ||
+                (log.response ?? "").toLowerCase().contains(text.toLowerCase());
+          } else {
+            return log.message.toLowerCase().contains(text.toLowerCase());
+          }
+        }).toList();
       }
       if (searchLogs.isEmpty) {
         currentSearch = null;
