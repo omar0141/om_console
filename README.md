@@ -1,3 +1,6 @@
+![Stand With Palestine](https://raw.githubusercontent.com/TheBSD/StandWithPalestine/main/banner-no-action.svg)
+
+
 # Om Console
 
 Om Console is a live console for Flutter that enables viewing UI prints and HTTP requests. It integrates with Postman via curl for enhanced debugging capabilities.
@@ -6,13 +9,16 @@ Om Console is a live console for Flutter that enables viewing UI prints and HTTP
 
 ## Screenshots
 
-![Om Console Screenshot 1](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot1.jpg)
-
-![Om Console Screenshot 2](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot2.png)
-
-![Om Console Screenshot 3](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot3.png)
-
-![Om Console Screenshot 4](https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot4.png)
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot1.jpg" alt="Om Console Screenshot 1"/></td>
+    <td><img src="https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot2.png" alt="Om Console Screenshot 2"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot3.png" alt="Om Console Screenshot 3"/></td>
+    <td><img src="https://raw.githubusercontent.com/omar0141/om_console/refs/heads/main/Screenshot4.png" alt="Om Console Screenshot 4"/></td>
+  </tr>
+</table>
 
 ## Installation
 
