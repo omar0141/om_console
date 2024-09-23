@@ -450,7 +450,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 children: [
                   Expanded(
                     child: SubstringHighlight(
-                      text: "Body: ${log.headers}",
+                      text: "Body: ${log.body}",
                       term: OmConsole.searchConroller.text,
                       textStyle: TextStyle(
                         color: log.textColor,
