@@ -167,10 +167,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   child: GestureDetector(
                     onTap: () {
                       if (OmConsole.scrollToBottom) {
-                        OmConsole.itemScrollController.scrollTo(
-                          index: OmConsole.logs.value.length - 1,
-                          duration: const Duration(milliseconds: 100),
-                        );
+                        OmConsole.scrollToBottomMethod();
                         OmConsole.scrollToBottom = false;
                       } else {
                         if (OmConsole.logs.value.isNotEmpty) {
