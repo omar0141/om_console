@@ -29,6 +29,54 @@ class Console {
 
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!OmConsole.scrollToBottom) {
+            OmConsole.itemScrollController.scrollTo(
+              index: OmConsole.logs.value.length - 1,
+              duration: const Duration(milliseconds: 100),
+            );
+          }
+        });
+      } catch (e) {
+        print(e.toString());
+      }
+    });
+  }
+
+  static void logSql({
+    required String dbName,
+    required String spName,
+    required Map<String, dynamic> params,
+    Color textColor = Colors.black,
+    Color backgroundColor = const Color.fromARGB(255, 207, 223, 190),
+  }) {
+    if (OmConsole.showConsole == false) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        int lastId =
+            (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
+        Log logSql = Log(
+          OmConsole.generateSqlQuery(dbName, spName, params),
+          textColor: textColor,
+          backgroundColor: backgroundColor,
+          id: lastId,
+          type: LogType.sql,
+          curlCommand: OmConsole.generateSqlQuery(dbName, spName, params),
+        );
+        OmConsole.orgLogs.add(logSql);
+        OmConsole.logs.value.add(logSql);
+
+        OmConsole.filterWithTags(OmConsole.searchConroller.text);
+        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+        OmConsole.logs.notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!OmConsole.scrollToBottom) {
+            OmConsole.itemScrollController.scrollTo(
+              index: OmConsole.logs.value.length - 1,
+              duration: const Duration(milliseconds: 100),
+            );
+          }
+        });
       } catch (e) {
         print(e.toString());
       }
@@ -40,7 +88,7 @@ class Console {
     required String method,
     required Map<String, dynamic> headers,
     required Map<String, dynamic> body,
-    Color textColor = Colors.white,
+    Color textColor = Colors.black,
     Color backgroundColor = const Color.fromARGB(255, 207, 223, 190),
     required int statusCode,
     required Map<String, dynamic> response,
@@ -76,6 +124,14 @@ class Console {
         OmConsole.filterWithTags(OmConsole.searchConroller.text);
         // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         OmConsole.logs.notifyListeners();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!OmConsole.scrollToBottom) {
+            OmConsole.itemScrollController.scrollTo(
+              index: OmConsole.logs.value.length - 1,
+              duration: const Duration(milliseconds: 100),
+            );
+          }
+        });
       } catch (e) {
         print(e.toString());
       }
@@ -113,6 +169,7 @@ class OmConsole {
   static int currentSearchScrollIndex = 0;
   static Log? currentSearch;
   static bool showConsole = true;
+  static bool scrollToBottom = false;
   static int maxLines = 200;
   static final ItemScrollController itemScrollController =
       ItemScrollController();
@@ -208,6 +265,51 @@ class OmConsole {
     }
   }
 
+  static String generateSqlQuery(
+      String dbName, String spName, Map<String, dynamic> params) {
+    // Start building the SQL query
+    StringBuffer sqlQuery = StringBuffer();
+
+    // Add USE statement if needed (you might want to make this configurable)
+    sqlQuery.writeln("USE [$dbName]");
+    sqlQuery.writeln("GO");
+
+    // Declare variables
+    sqlQuery.writeln("DECLARE @return_value int,");
+    sqlQuery.writeln("\t\t@State int,");
+    sqlQuery.writeln("\t\t@Message nvarchar(500)");
+
+    // Initialize state variables
+    sqlQuery.writeln("SELECT\t@State = 0");
+    sqlQuery.writeln("SELECT\t@Message = N'0'");
+
+    // Start EXEC statement
+    sqlQuery.write("EXEC\t@return_value = $spName");
+
+    // Add parameters
+    List<String> paramStrings = [];
+    params.forEach((key, value) {
+      String paramValue = value is String
+          ? "N'${value.replaceAll("'", "''")}'"
+          : value.toString();
+      paramStrings.add("@$key = $paramValue");
+    });
+
+    if (paramStrings.isNotEmpty) {
+      sqlQuery.writeln();
+      sqlQuery.writeln("\t\t${paramStrings.join(',\n\t\t')}");
+    }
+
+    // Add return statements
+    sqlQuery.writeln();
+    sqlQuery.writeln("SELECT\t@State as N'@State',");
+    sqlQuery.writeln("\t\t@Message as N'@Message'");
+    sqlQuery.writeln("SELECT\t'Return Value' = @return_value");
+    sqlQuery.writeln("GO");
+
+    return sqlQuery.toString();
+  }
+
   static String generateCurlCommandWithJson(
       String url, Map<String, dynamic> headers, Map<String, dynamic> jsonData) {
     // Start building the curl command
@@ -264,10 +366,11 @@ class OmConsole {
     double maxWidth =
         MediaQuery.of(navigatorKey.currentContext!).size.width - 20;
 
-    // First pass: Add all HTTP logs
+    // First pass: Only count the lines of non-HTTP logs
     for (int i = orgLogs.length - 1; i >= 0; i--) {
       Log log = orgLogs[i];
-      if (log.type == LogType.http) {
+
+      if (log.type != LogType.http && log.type != LogType.sql) {
         final textSpan = TextSpan(text: log.message, style: textStyle);
         final textPainter = TextPainter(
           text: textSpan,
@@ -278,74 +381,34 @@ class OmConsole {
         final logLines =
             (textPainter.height / textPainter.preferredLineHeight).ceil();
 
-        limitedLogs.insert(0, log);
-        totalLines += logLines;
-      }
-    }
-
-    // Second pass: Add non-HTTP logs until maxLines is reached
-    for (int i = orgLogs.length - 1; i >= 0; i--) {
-      Log log = orgLogs[i];
-      if (log.type != LogType.http) {
-        final textSpan = TextSpan(text: log.message, style: textStyle);
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-          maxLines: null,
-        );
-        textPainter.layout(maxWidth: maxWidth);
-        final logLines =
-            (textPainter.height / textPainter.preferredLineHeight).ceil();
-
-        if (totalLines + logLines > maxLines) {
+        if (totalLines + logLines <= maxLines) {
+          limitedLogs.insert(0, log); // Add each log as its own entry
+          totalLines += logLines;
+        } else {
           break; // Stop when exceeding the max line limit
         }
-
-        limitedLogs.insert(0, log);
-        totalLines += logLines;
       }
     }
 
-    // If we're still over maxLines, start removing non-HTTP logs
-    while (totalLines > maxLines &&
-        limitedLogs.any((log) => log.type != LogType.http)) {
-      int indexToRemove =
-          limitedLogs.indexWhere((log) => log.type != LogType.http);
-      Log removedLog = limitedLogs.removeAt(indexToRemove);
+    // Add all HTTP logs back without counting them in the line limit
+    for (int i = orgLogs.length - 1; i >= 0; i--) {
+      Log log = orgLogs[i];
 
-      final removedTextSpan =
-          TextSpan(text: removedLog.message, style: textStyle);
-      final removedTextPainter = TextPainter(
-        text: removedTextSpan,
-        textDirection: TextDirection.ltr,
-        maxLines: null,
-      );
-      removedTextPainter.layout(maxWidth: maxWidth);
-      final removedLines =
-          (removedTextPainter.height / removedTextPainter.preferredLineHeight)
-              .ceil();
-      totalLines -= removedLines;
+      if (log.type == LogType.http || log.type == LogType.sql) {
+        limitedLogs.insert(
+            0, log); // Insert HTTP logs without altering line count
+      }
     }
 
-    // If we're still over maxLines, start removing HTTP logs from the oldest
-    while (totalLines > maxLines && limitedLogs.isNotEmpty) {
-      Log removedLog = limitedLogs.removeAt(0);
+    // Replace the orgLogs with the properly limited logs
+    orgLogs.clear();
+    orgLogs
+        .addAll(limitedLogs); // Ensure each log is added as an individual item
 
-      final removedTextSpan =
-          TextSpan(text: removedLog.message, style: textStyle);
-      final removedTextPainter = TextPainter(
-        text: removedTextSpan,
-        textDirection: TextDirection.ltr,
-        maxLines: null,
-      );
-      removedTextPainter.layout(maxWidth: maxWidth);
-      final removedLines =
-          (removedTextPainter.height / removedTextPainter.preferredLineHeight)
-              .ceil();
-      totalLines -= removedLines;
-    }
-
-    orgLogs = limitedLogs;
+    // Notify listeners after updating the logs list
+    OmConsole.logs.value = List.from(limitedLogs); // Rebuild the value
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    OmConsole.logs.notifyListeners();
   }
 }
 
@@ -381,4 +444,4 @@ class Log {
   });
 }
 
-enum LogType { normal, error, http, logs }
+enum LogType { normal, error, http, logs, sql }
