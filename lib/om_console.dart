@@ -31,10 +31,7 @@ class Console {
         OmConsole.logs.notifyListeners();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!OmConsole.scrollToBottom) {
-            OmConsole.itemScrollController.scrollTo(
-              index: OmConsole.logs.value.length - 1,
-              duration: const Duration(milliseconds: 100),
-            );
+            OmConsole.scrollToBottomMethod();
           }
         });
       } catch (e) {
@@ -71,10 +68,7 @@ class Console {
         OmConsole.logs.notifyListeners();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!OmConsole.scrollToBottom) {
-            OmConsole.itemScrollController.scrollTo(
-              index: OmConsole.logs.value.length - 1,
-              duration: const Duration(milliseconds: 100),
-            );
+            OmConsole.scrollToBottomMethod();
           }
         });
       } catch (e) {
@@ -126,10 +120,7 @@ class Console {
         OmConsole.logs.notifyListeners();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!OmConsole.scrollToBottom) {
-            OmConsole.itemScrollController.scrollTo(
-              index: OmConsole.logs.value.length - 1,
-              duration: const Duration(milliseconds: 100),
-            );
+            OmConsole.scrollToBottomMethod();
           }
         });
       } catch (e) {
@@ -189,6 +180,17 @@ class OmConsole {
       logs.notifyListeners();
     } catch (e) {
       print(e.toString());
+    }
+  }
+
+  static void scrollToBottomMethod() {
+    try {
+      OmConsole.itemScrollController.scrollTo(
+        index: OmConsole.logs.value.length - 1,
+        duration: const Duration(milliseconds: 100),
+      );
+    } catch (e) {
+      //
     }
   }
 
