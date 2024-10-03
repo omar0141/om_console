@@ -41,7 +41,6 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
   double consoleHeight = 30;
   double _lastConsoleHeight = 300;
   bool expandedConsole = false;
-  bool scrollToBottom = true;
   bool copied = false;
   bool multiFilter = false;
 
@@ -55,31 +54,30 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
   @override
   void initState() {
     OmConsole.itemPositionsListener.itemPositions.addListener(() {
-      try {
-        if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
-            (OmConsole.logs.value.length - 1)) {
-          setState(() {
-            scrollToBottom = false;
-          });
-          Future.microtask(() => scrollToBottom = false);
-        } else {
-          setState(() {
-            scrollToBottom = true;
-          });
-          Future.microtask(() => scrollToBottom = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          if (OmConsole.itemPositionsListener.itemPositions.value.last.index ==
+              (OmConsole.logs.value.length - 1)) {
+            setState(() {
+              OmConsole.scrollToBottom = false;
+            });
+            Future.microtask(() => OmConsole.scrollToBottom = false);
+          } else {
+            setState(() {
+              OmConsole.scrollToBottom = true;
+            });
+            Future.microtask(() => OmConsole.scrollToBottom = true);
+          }
+        } catch (e) {
+          // your error message
         }
-      } catch (e) {
-        // your error message
-      }
+      });
     });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    screenHeight = (screenHeight! <= (orgScreenHeight! / 2))
-        ? (orgScreenHeight! / 2)
-        : screenHeight;
     if (!widget.showConsole) {
       OmConsole.maxLines = widget.maxLines;
       OmConsole.showConsole = false;
@@ -89,11 +87,12 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
       textDirection: TextDirection.ltr,
       child: Stack(
         children: [
-          ListView(
+          Column(
             children: [
-              SizedBox(
-                height: screenHeight,
-                child: widget.child,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: SizedBox(height: orgScreenHeight, child: widget.child),
+                ),
               ),
               MaterialApp(
                 navigatorKey: OmConsole.navigatorKey,
@@ -138,24 +137,24 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 onVerticalDragUpdate: (details) {
                   setState(() {
                     consoleHeight = (consoleHeight - details.primaryDelta!)
-                        .clamp(
-                            30,
-                            MediaQuery.of(context).size.height -
-                                _lastConsoleHeight);
+                        .clamp(orgConsoleHeight, (orgScreenHeight ?? 0));
                     screenHeight = (orgScreenHeight ?? 0) -
                         consoleHeight +
                         orgConsoleHeight;
                     _lastConsoleHeight = consoleHeight;
                   });
                 },
-                child: Container(
-                  color: const Color.fromARGB(255, 82, 82, 82),
-                  child: const Center(
-                      child: Icon(
-                    Icons.drag_handle,
-                    color: Colors.white,
-                    size: 10,
-                  )),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.resizeRow,
+                  child: Container(
+                    color: const Color.fromARGB(255, 82, 82, 82),
+                    child: const Center(
+                        child: Icon(
+                      Icons.drag_handle,
+                      color: Colors.white,
+                      size: 10,
+                    )),
+                  ),
                 ),
               ),
             ),
@@ -167,12 +166,12 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
                     onTap: () {
-                      if (scrollToBottom) {
+                      if (OmConsole.scrollToBottom) {
                         OmConsole.itemScrollController.scrollTo(
                           index: OmConsole.logs.value.length - 1,
                           duration: const Duration(milliseconds: 100),
                         );
-                        scrollToBottom = false;
+                        OmConsole.scrollToBottom = false;
                       } else {
                         if (OmConsole.logs.value.isNotEmpty) {
                           OmConsole.itemScrollController.scrollTo(
@@ -180,7 +179,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                             duration: const Duration(milliseconds: 100),
                           );
                         }
-                        scrollToBottom = true;
+                        OmConsole.scrollToBottom = true;
                       }
                       setState(() {});
                     },
@@ -191,7 +190,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Icon(
-                        scrollToBottom
+                        OmConsole.scrollToBottom
                             ? Icons.arrow_downward
                             : Icons.arrow_upward,
                         color: Colors.white,
@@ -240,6 +239,11 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
           consoleTab(
             text: "Logs",
             logType: LogType.logs,
+          ),
+          const SizedBox(width: 15),
+          consoleTab(
+            text: "Sql",
+            logType: LogType.sql,
           ),
           const Spacer(),
           if (expandedConsole)
@@ -341,21 +345,23 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
         valueListenable: OmConsole.logs,
         builder: (BuildContext context, List<Log> value, child) {
           return Padding(
-            padding: const EdgeInsetsDirectional.only(start: 10),
-            child: ScrollablePositionedList.builder(
-              itemPositionsListener: OmConsole.itemPositionsListener,
-              itemScrollController: OmConsole.itemScrollController,
-              itemCount: value.length,
-              itemBuilder: (context, i) {
-                Log log = value[i];
-                if (log.type == LogType.http) {
-                  return httpWidget(log);
-                } else {
-                  return normalTextWidget(log);
-                }
-              },
-            ),
-          );
+              padding: const EdgeInsetsDirectional.only(start: 10),
+              child: ScrollablePositionedList.builder(
+                itemPositionsListener: OmConsole.itemPositionsListener,
+                itemScrollController: OmConsole.itemScrollController,
+                itemCount: value.length,
+                itemBuilder: (context, i) {
+                  Log log = value[i];
+                  if (log.type == LogType.http) {
+                    return httpWidget(log);
+                  }
+                  if (log.type == LogType.sql) {
+                    return sqlWidget(log);
+                  } else {
+                    return normalTextWidget(log);
+                  }
+                },
+              ));
         },
       ),
     ));
@@ -507,6 +513,44 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                     ));
               }),
             ],
+          ),
+          Positioned(
+            right: 0,
+            child: CopyWidget(
+              text: log.curlCommand,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container sqlWidget(Log log) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: log.backgroundColor,
+        border: const Border(
+          top: BorderSide(width: 1),
+          bottom: BorderSide(width: 1),
+        ),
+      ),
+      child: Stack(
+        children: [
+          SubstringHighlight(
+            text: log.message,
+            term: OmConsole.searchConroller.text,
+            textStyle: TextStyle(
+              color: log.textColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textStyleHighlight: const TextStyle(
+              backgroundColor: Color.fromARGB(139, 0, 140, 255),
+              fontSize: 14,
+              fontWeight: FontWeight.normal,
+            ),
           ),
           Positioned(
             right: 0,
