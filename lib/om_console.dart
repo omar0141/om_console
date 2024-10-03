@@ -35,7 +35,7 @@ class Console {
           }
         });
       } catch (e) {
-        print(e.toString());
+        // print(e.toString());
       }
     });
   }
@@ -72,7 +72,7 @@ class Console {
           }
         });
       } catch (e) {
-        print(e.toString());
+        // print(e.toString());
       }
     });
   }
@@ -124,7 +124,7 @@ class Console {
           }
         });
       } catch (e) {
-        print(e.toString());
+        // print(e.toString());
       }
     });
   }
@@ -179,7 +179,7 @@ class OmConsole {
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
       logs.notifyListeners();
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
     }
   }
 
@@ -263,7 +263,7 @@ class OmConsole {
         }
       }
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
     }
   }
 
@@ -358,7 +358,7 @@ class OmConsole {
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
       logs.notifyListeners();
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
     }
   }
 
