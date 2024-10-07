@@ -1,9 +1,21 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:om_console/console_wrapper.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class Console {
+  static wrap({
+    required Widget child,
+    bool showConsole = true,
+    int maxLines = 2000,
+  }) =>
+      ConsoleWrapper(
+        showConsole: showConsole,
+        maxLines: maxLines,
+        child: child,
+      );
+
   static void log(
     dynamic message, {
     LogType type = LogType.normal,
@@ -161,7 +173,7 @@ class OmConsole {
   static Log? currentSearch;
   static bool showConsole = true;
   static bool scrollToBottom = false;
-  static int maxLines = 200;
+  static int maxLines = 20000;
   static final ItemScrollController itemScrollController =
       ItemScrollController();
   static ItemPositionsListener itemPositionsListener =
@@ -194,17 +206,72 @@ class OmConsole {
     }
   }
 
-  static void searchPaging({
-    bool forward = false,
-    bool back = false,
-  }) {
+  static void searchPaging() {
     try {
       String text = searchConroller.text;
-      List<Log> searchLogs = [];
-      if (text.isEmpty) {
-        searchLogs = [];
-      } else {
-        searchLogs = logs.value.where((log) {
+      List<Log> splitLogs = [];
+      TextStyle textStyle = const TextStyle(fontSize: 16);
+      double maxWidth =
+          MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
+
+      // Split logs using TextPainter
+      for (Log originalLog in logs.value) {
+        if (originalLog.type == LogType.http ||
+            originalLog.type == LogType.sql) {
+          splitLogs.add(originalLog);
+        } else {
+          final textSpan = TextSpan(
+            text: originalLog.message,
+            style: textStyle,
+          );
+          final textPainter = TextPainter(
+            text: textSpan,
+            textDirection: TextDirection.ltr,
+            maxLines: null,
+          );
+          textPainter.layout(maxWidth: maxWidth);
+
+          final List<LineMetrics> lines = textPainter.computeLineMetrics();
+          String remainingText = originalLog.message;
+          int lastOffset = 0;
+
+          for (int i = 0; i < lines.length; i++) {
+            final LineMetrics line = lines[i];
+            final TextPosition endPosition = textPainter.getPositionForOffset(
+              Offset(maxWidth, line.baseline),
+            );
+
+            String lineText = '';
+            if (i == lines.length - 1) {
+              // Last line
+              lineText = remainingText.substring(lastOffset).trim();
+            } else {
+              lineText = remainingText
+                  .substring(lastOffset, endPosition.offset)
+                  .trim();
+            }
+
+            lastOffset = endPosition.offset;
+
+            if (lineText.isNotEmpty) {
+              splitLogs.add(Log(
+                lineText,
+                id: originalLog.id * 1000 + i,
+                type: originalLog.type,
+                textColor: originalLog.textColor,
+                backgroundColor: originalLog.backgroundColor,
+              ));
+            }
+          }
+        }
+      }
+
+      // Update logs.value with split logs
+      logs.value = splitLogs;
+
+      // Perform search on split logs
+      if (text.isNotEmpty) {
+        logs.value.where((log) {
           if (log.type == LogType.http) {
             return log.statusCode
                     .toString()
@@ -220,50 +287,44 @@ class OmConsole {
           }
         }).toList();
       }
-      if (searchLogs.isEmpty) {
-        currentSearch = null;
-        currentSearchScrollIndex = 0;
-        return;
-      }
-      if (forward) {
-        back = false;
-        currentSearchScrollIndex += 1;
-        if (currentSearchScrollIndex > searchLogs.length - 1) {
-          currentSearchScrollIndex = searchLogs.length - 1;
-        }
-        currentSearch = searchLogs[currentSearchScrollIndex];
-        int index = logs.value.indexWhere((e) => currentSearch!.id == e.id);
-        if (index < 0) {
-          itemScrollController.scrollTo(
-              index: 0,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeInOutCubic);
-        } else {
-          itemScrollController.scrollTo(
-              index: index,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeInOutCubic);
-        }
-      } else {
-        forward = false;
-        currentSearchScrollIndex -= 1;
-        if (currentSearchScrollIndex < 0) currentSearchScrollIndex = 0;
-        currentSearch = searchLogs[currentSearchScrollIndex];
-        int index = logs.value.indexWhere((e) => currentSearch!.id == e.id);
-        if (index < 0) {
-          itemScrollController.scrollTo(
-              index: 0,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeInOutCubic);
-        } else {
-          itemScrollController.scrollTo(
-              index: index,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.easeInOutCubic);
-        }
-      }
+      lineNavigate();
+      // Notify listeners of the change
+      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+      logs.notifyListeners();
     } catch (e) {
-      // print(e.toString());
+      print("Error in searchPaging: $e");
+    }
+  }
+
+  static void lineNavigate({
+    bool forward = false,
+    bool back = false,
+  }) {
+    if (logs.value.isEmpty || searchConroller.text.isEmpty) {
+      currentSearch = null;
+      currentSearchScrollIndex = 0;
+      return;
+    }
+
+    if (forward) {
+      currentSearchScrollIndex += 1;
+      if (currentSearchScrollIndex > logs.value.length - 1) {
+        currentSearchScrollIndex = logs.value.length - 1;
+      }
+    } else if (back) {
+      currentSearchScrollIndex -= 1;
+      if (currentSearchScrollIndex < 0) currentSearchScrollIndex = 0;
+    }
+
+    currentSearch = logs.value[currentSearchScrollIndex];
+    int index = logs.value.indexWhere((e) => currentSearch!.id == e.id);
+
+    if (index >= 0) {
+      itemScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOutCubic,
+      );
     }
   }
 
@@ -366,7 +427,7 @@ class OmConsole {
     List<Log> limitedLogs = [];
     int totalLines = 0;
     double maxWidth =
-        MediaQuery.of(navigatorKey.currentContext!).size.width - 20;
+        MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
 
     // First pass: Only count the lines of non-HTTP logs
     for (int i = orgLogs.length - 1; i >= 0; i--) {
