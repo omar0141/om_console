@@ -39,6 +39,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
   double orgConsoleHeight = 30;
   double? screenHeight;
   double consoleHeight = 30;
+  double screenWidth = 30;
   double _lastConsoleHeight = 300;
   bool expandedConsole = false;
   bool copied = false;
@@ -46,7 +47,10 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 
   @override
   void didChangeDependencies() {
-    orgScreenHeight = MediaQuery.of(context).size.height - orgConsoleHeight;
+    screenWidth = MediaQuery.of(context).size.width;
+    orgScreenHeight = MediaQuery.of(context).size.height -
+        orgConsoleHeight -
+        MediaQuery.of(context).padding.bottom;
     screenHeight = orgScreenHeight;
     super.didChangeDependencies();
   }
@@ -78,8 +82,8 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 
   @override
   Widget build(BuildContext context) {
+    OmConsole.maxLines = widget.maxLines;
     if (!widget.showConsole) {
-      OmConsole.maxLines = widget.maxLines;
       OmConsole.showConsole = false;
       return widget.child;
     }
@@ -114,7 +118,6 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                 home: SizedBox(
                   height: consoleHeight,
                   child: Scaffold(
-                    backgroundColor: Colors.red,
                     body: Container(
                       color: const Color.fromARGB(255, 37, 37, 37),
                       child: Column(children: [
@@ -130,9 +133,9 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
           ),
           if (expandedConsole)
             Positioned(
-              top: screenHeight,
               left: 0,
               right: 0,
+              bottom: consoleHeight - 10,
               child: GestureDetector(
                 onVerticalDragUpdate: (details) {
                   setState(() {
@@ -176,6 +179,7 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
                             duration: const Duration(milliseconds: 100),
                           );
                         }
+                        OmConsole.currentSearchScrollIndex = 0;
                         OmConsole.scrollToBottom = true;
                       }
                       setState(() {});
@@ -213,125 +217,143 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
             )
           ]),
       padding: const EdgeInsets.all(5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          consoleTab(text: "All Console"),
-          const SizedBox(width: 15),
-          consoleTab(
-            text: "Normal",
-            logType: LogType.normal,
-          ),
-          const SizedBox(width: 15),
-          consoleTab(
-            text: "Http",
-            logType: LogType.http,
-          ),
-          const SizedBox(width: 15),
-          consoleTab(
-            text: "Error",
-            logType: LogType.error,
-          ),
-          const SizedBox(width: 15),
-          consoleTab(
-            text: "Logs",
-            logType: LogType.logs,
-          ),
-          const SizedBox(width: 15),
-          consoleTab(
-            text: "Sql",
-            logType: LogType.sql,
-          ),
-          const Spacer(),
-          if (expandedConsole)
-            Row(
+      child: screenWidth <= 800
+          ? Wrap(
+              runSpacing: 10,
               children: [
-                SizedBox(
-                  width: 250,
-                  child: TextField(
-                    controller: OmConsole.searchConroller,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.white,
-                    ),
-                    onChanged: (e) {
-                      OmConsole.currentSearchScrollIndex = 0;
-                      OmConsole.searchPaging();
-                      setState(() {});
-                    },
-                    decoration: const InputDecoration(
-                        fillColor: Color.fromARGB(255, 117, 117, 117),
-                        filled: true,
-                        contentPadding: EdgeInsets.all(5),
-                        isDense: true,
-                        hintText: "Search...",
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                            color: Color.fromARGB(255, 199, 199, 199))),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      OmConsole.searchPaging(back: true);
-                      setState(() {});
-                    },
-                    child: const Icon(
-                      Icons.arrow_upward,
-                      size: 20,
-                      color: Color.fromARGB(255, 197, 197, 197),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      OmConsole.searchPaging(forward: true);
-                      setState(() {});
-                    },
-                    child: const Icon(
-                      Icons.arrow_downward,
-                      size: 20,
-                      color: Color.fromARGB(255, 197, 197, 197),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      OmConsole.clear();
-                    },
-                    child: const Icon(
-                      Icons.delete,
-                      size: 20,
-                      color: Color.fromARGB(255, 197, 197, 197),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      closeConsole();
-                    },
-                    child: const Icon(
-                      Icons.remove,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
+                leftSideHeader(),
+                if (expandedConsole) rightSideHeader(),
+              ],
+            )
+          : Row(
+              children: [
+                leftSideHeader(),
+                const Spacer(),
+                if (expandedConsole) rightSideHeader(),
               ],
             ),
-        ],
-      ),
+    );
+  }
+
+  Row rightSideHeader() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 250,
+          child: TextField(
+            controller: OmConsole.searchConroller,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            onChanged: (e) {
+              OmConsole.currentSearchScrollIndex = 0;
+              OmConsole.searchPaging();
+              setState(() {});
+            },
+            decoration: const InputDecoration(
+                fillColor: Color.fromARGB(255, 117, 117, 117),
+                filled: true,
+                contentPadding: EdgeInsets.all(5),
+                isDense: true,
+                hintText: "Search...",
+                border: InputBorder.none,
+                hintStyle:
+                    TextStyle(color: Color.fromARGB(255, 199, 199, 199))),
+          ),
+        ),
+        const SizedBox(width: 5),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              OmConsole.lineNavigate(back: true);
+              setState(() {});
+            },
+            child: const Icon(
+              Icons.arrow_upward,
+              size: 20,
+              color: Color.fromARGB(255, 197, 197, 197),
+            ),
+          ),
+        ),
+        const SizedBox(width: 5),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              OmConsole.lineNavigate(forward: true);
+              setState(() {});
+            },
+            child: const Icon(
+              Icons.arrow_downward,
+              size: 20,
+              color: Color.fromARGB(255, 197, 197, 197),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              OmConsole.clear();
+            },
+            child: const Icon(
+              Icons.delete,
+              size: 20,
+              color: Color.fromARGB(255, 197, 197, 197),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () {
+              closeConsole();
+            },
+            child: const Icon(
+              Icons.remove,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+  }
+
+  Row leftSideHeader() {
+    return Row(
+      children: [
+        consoleTab(text: "All Console"),
+        const SizedBox(width: 15),
+        consoleTab(
+          text: "Normal",
+          logType: LogType.normal,
+        ),
+        const SizedBox(width: 15),
+        consoleTab(
+          text: "Http",
+          logType: LogType.http,
+        ),
+        const SizedBox(width: 15),
+        consoleTab(
+          text: "Error",
+          logType: LogType.error,
+        ),
+        const SizedBox(width: 15),
+        consoleTab(
+          text: "Logs",
+          logType: LogType.logs,
+        ),
+        const SizedBox(width: 15),
+        consoleTab(
+          text: "Sql",
+          logType: LogType.sql,
+        ),
+      ],
     );
   }
 
@@ -366,13 +388,14 @@ class _ConsoleWrapperState extends State<ConsoleWrapper>
 
   Padding normalTextWidget(Log log) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsetsDirectional.only(top: 2, bottom: 2, end: 10),
       child: SubstringHighlight(
         text: log.message,
         term: OmConsole.searchConroller.text,
-        textStyleHighlight: const TextStyle(
-          backgroundColor: Color.fromARGB(139, 0, 140, 255),
+        textStyleHighlight: TextStyle(
+          backgroundColor: const Color.fromARGB(139, 0, 140, 255),
           fontSize: 16,
+          color: log.textColor,
           fontWeight: FontWeight.normal,
         ),
         textStyle: TextStyle(
