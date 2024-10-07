@@ -1,6 +1,5 @@
 ![Stand With Palestine](https://raw.githubusercontent.com/TheBSD/StandWithPalestine/main/banner-no-action.svg)
 
-
 # Om Console
 
 Om Console is a live console for Flutter that enables viewing UI prints and HTTP requests. It integrates with Postman via curl for enhanced debugging capabilities.
@@ -39,7 +38,7 @@ In your `main.dart` file:
 import 'package:om_console/om_console.dart';
 
 void main() async {
-  OmConsole.consoleLisitener(() {
+  Console.consoleLisitener(() {
     // Your app initialization code here
     runApp(MyApp());
   });
@@ -51,11 +50,11 @@ void main() async {
 In your app's root widget:
 
 ```dart
-import 'package:om_console/console_wrapper.dart';
+import 'package:om_console/om_console.dart';
 
 @override
 Widget build(BuildContext context) {
-  return ConsoleWrapper(
+  return Console.wrap(
     showConsole: true,
     maxLines: 200,
     child: MaterialApp(
@@ -104,14 +103,13 @@ Console.logHttp(
 
 ## Configuration
 
-The `ConsoleWrapper` widget supports the following properties:
+The `Console.wrap` method supports the following properties:
 
 - `showConsole`: Boolean to toggle console visibility.
 - `maxLines`: Integer to set the maximum number of rendered console lines, optimizing performance for large logs.
 
 ## Limitations and Future Improvements
 
-- The console is currently optimized for wide screens. Mobile screen support is in development.
 - HTTP requests can only be copied as raw data. Support for copying as form data is planned for future releases.
 - Search functionality in HTTP requests is still under development.
 
