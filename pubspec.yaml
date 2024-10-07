@@ -1,6 +1,6 @@
 name: om_console
 description: "A flutter console widget showing in the ui like vscode console"
-version: 0.0.19
+version: 0.0.20
 homepage: https://github.com/omar0141/om_console
 
 environment:
