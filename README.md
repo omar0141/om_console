@@ -54,7 +54,7 @@ import 'package:om_console/om_console.dart';
 
 @override
 Widget build(BuildContext context) {
-  return Console.wrap(
+  return ConsoleWrapper(
     showConsole: true,
     maxLines: 200,
     child: MaterialApp(
@@ -103,7 +103,7 @@ Console.logHttp(
 
 ## Configuration
 
-The `Console.wrap` method supports the following properties:
+The `ConsoleWrapper` method supports the following properties:
 
 - `showConsole`: Boolean to toggle console visibility.
 - `maxLines`: Integer to set the maximum number of rendered console lines, optimizing performance for large logs.
