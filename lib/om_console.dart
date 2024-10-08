@@ -1,21 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:om_console/console_wrapper.dart';
+import 'package:om_console/console_widget.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class Console {
-  static wrap({
-    required Widget child,
-    bool showConsole = true,
-    int maxLines = 2000,
-  }) =>
-      ConsoleWrapper(
-        showConsole: showConsole,
-        maxLines: maxLines,
-        child: child,
-      );
+class ConsoleWrapper extends StatelessWidget {
+  const ConsoleWrapper({
+    Key? key,
+    required this.child,
+    this.showConsole = true,
+    this.maxLines = 200,
+  }) : super(key: key);
 
+  final Widget child;
+  final bool showConsole;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConsoleWidget(
+      showConsole: showConsole,
+      maxLines: maxLines,
+      child: child,
+    );
+  }
+}
+
+class Console {
   static void log(
     dynamic message, {
     LogType type = LogType.normal,
