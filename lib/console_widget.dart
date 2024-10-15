@@ -472,41 +472,34 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                 ],
               ),
               const Divider(color: Colors.black, thickness: 0.2),
-              Row(
-                children: [
-                  Expanded(
-                    child: SubstringHighlight(
-                      text: "Body: ${log.body}",
-                      term: OmConsole.searchConroller.text,
-                      textStyle: TextStyle(
-                        color: log.textColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textStyleHighlight: const TextStyle(
-                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: SubstringHighlight(
-                      text: "Headers: ${log.headers}",
-                      term: OmConsole.searchConroller.text,
-                      textStyle: TextStyle(
-                        color: log.textColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textStyleHighlight: const TextStyle(
-                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ],
+              SubstringHighlight(
+                text: "Headers: ${log.headers}",
+                term: OmConsole.searchConroller.text,
+                textStyle: TextStyle(
+                  color: log.textColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                textStyleHighlight: const TextStyle(
+                  backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+              const Divider(color: Colors.black, thickness: 0.2),
+              SubstringHighlight(
+                text: "Body: ${log.body}",
+                term: OmConsole.searchConroller.text,
+                textStyle: TextStyle(
+                  color: log.textColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textStyleHighlight: const TextStyle(
+                  backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
               const Divider(color: Colors.black, thickness: 0.2),
               StatefulBuilder(builder: (context, responseSetState) {
