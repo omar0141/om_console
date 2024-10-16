@@ -197,14 +197,33 @@ class OmConsole {
 
   static void clear() {
     try {
-      for (var log in logs.value) {
-        orgLogs.removeWhere((e) => e.id == log.id);
+      if (logTypes.isEmpty || logTypes.contains(null)) {
+        // Clear all logs
+        orgLogs.clear();
+        logs.value.clear();
+      } else {
+        // Clear only logs of specified types
+        orgLogs.removeWhere((log) => logTypes.contains(log.type));
+        logs.value.removeWhere((log) => logTypes.contains(log.type));
       }
-      logs.value.clear();
+
+      // Reset search-related properties
+      currentSearchIndex = 0;
+      searchResultsLength = 0;
+      currentSearch = null;
+
+      // Notify listeners of the change
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
       logs.notifyListeners();
+
+      // Reapply filters if any
+      if (searchConroller.text.isNotEmpty) {
+        searchPaging();
+      } else {
+        filterWithTags(searchConroller.text);
+      }
     } catch (e) {
-      // print(e.toString());
+      print("Error in clear: $e");
     }
   }
 
@@ -445,29 +464,24 @@ class OmConsole {
     try {
       currentSearchScrollIndex = 0;
       if (logTypes.isEmpty || logTypes.contains(null)) {
-        logs.value = orgLogs
-            .map((e) => Log(
-                  e.message,
-                  url: e.url,
-                  method: e.method,
-                  headers: e.headers,
-                  body: e.body,
-                  statusCode: e.statusCode,
-                  response: e.response,
-                  textColor: e.textColor,
-                  id: e.id,
-                  type: e.type,
-                  curlCommand: e.curlCommand,
-                  backgroundColor: e.backgroundColor,
-                ))
-            .toList();
+        logs.value = List.from(orgLogs); // Create a new list from orgLogs
       } else {
         logs.value =
             orgLogs.where((log) => logTypes.contains(log.type)).toList();
       }
-      searchPaging();
+      if (text.isNotEmpty) {
+        searchPaging();
+      } else {
+        // Reset search-related properties when there's no search text
+        currentSearchIndex = 0;
+        searchResultsLength = logs.value.length;
+        currentSearch = null;
+        // Notify listeners of the change
+        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+        logs.notifyListeners();
+      }
     } catch (e) {
-      // print(e.toString());
+      print("Error in filterWithTags: $e");
     }
   }
 
