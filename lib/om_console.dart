@@ -259,7 +259,7 @@ class OmConsole {
   static ItemPositionsListener itemPositionsListener =
       ItemPositionsListener.create();
 
-/// Global key for the navigator state.
+  /// Global key for the navigator state.
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
