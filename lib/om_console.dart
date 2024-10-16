@@ -4,7 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:om_console/console_widget.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+/// A wrapper widget that provides a console functionality.
+///
+/// This widget wraps a child widget and optionally displays a console.
+/// The console can be toggled on/off and the maximum number of lines
+/// can be specified.
 class ConsoleWrapper extends StatelessWidget {
+  /// Creates a ConsoleWrapper.
+  ///
+  /// The [child] parameter is required and represents the widget to be wrapped.
+  /// [showConsole] determines whether the console should be displayed.
+  /// [maxLines] sets the maximum number of lines in the console.
   const ConsoleWrapper({
     Key? key,
     required this.child,
@@ -12,8 +22,13 @@ class ConsoleWrapper extends StatelessWidget {
     this.maxLines = 200,
   }) : super(key: key);
 
+  /// The widget to be wrapped by the console.
   final Widget child;
+
+  /// Whether to show the console or not.
   final bool showConsole;
+
+  /// The maximum number of lines to display in the console.
   final int maxLines;
 
   @override
@@ -26,7 +41,13 @@ class ConsoleWrapper extends StatelessWidget {
   }
 }
 
+/// A class that provides logging functionality for the console.
 class Console {
+  /// Logs a message to the console.
+  ///
+  /// [message] is the content to be logged.
+  /// [type] specifies the type of log (default is [LogType.normal]).
+  /// [textColor] sets the color of the log text (default is white).
   static void log(
     dynamic message, {
     LogType type = LogType.normal,
@@ -63,6 +84,13 @@ class Console {
     });
   }
 
+  /// Logs an SQL query to the console.
+  ///
+  /// [dbName] is the name of the database.
+  /// [spName] is the name of the stored procedure.
+  /// [params] is a map of parameters for the SQL query.
+  /// [textColor] sets the color of the log text (default is black).
+  /// [backgroundColor] sets the background color of the log (default is light green).
   static void logSql({
     required String dbName,
     required String spName,
@@ -100,6 +128,16 @@ class Console {
     });
   }
 
+  /// Logs an HTTP request to the console.
+  ///
+  /// [url] is the URL of the HTTP request.
+  /// [method] is the HTTP method used.
+  /// [headers] is a map of HTTP headers.
+  /// [body] is the request body.
+  /// [textColor] sets the color of the log text (default is black).
+  /// [backgroundColor] sets the background color of the log (default is light green).
+  /// [statusCode] is the HTTP status code of the response.
+  /// [response] is the response body.
   static void logHttp({
     required String url,
     required String method,
@@ -152,7 +190,10 @@ class Console {
     });
   }
 
-  static void consoleLisitener(function) {
+  /// Sets up a console listener that captures print statements and errors.
+  ///
+  /// [function] is the function to be executed within the zone.
+  static void consoleLisitener(Function function) {
     runZoned(
       () {
         function();
@@ -175,26 +216,55 @@ class Console {
   }
 }
 
+/// A class that manages the console functionality.
 class OmConsole {
+  /// List of original logs.
   static List<Log> orgLogs = [];
+
+  /// ValueNotifier for the list of logs to be displayed.
   static final ValueNotifier<List<Log>> logs = ValueNotifier<List<Log>>([]);
+
+  /// List of log types to filter.
   static List<LogType?> logTypes = [];
+
+  /// Controller for the search text field.
   static TextEditingController searchConroller = TextEditingController();
+
+  /// Current scroll index for search results.
   static int currentSearchScrollIndex = 0;
+
+  /// Currently selected search result.
   static Log? currentSearch;
+
+  /// Flag to determine if the console should be shown.
   static bool showConsole = true;
+
+  /// Flag to determine if the console should scroll to bottom.
   static bool scrollToBottom = false;
+
+  /// Maximum number of lines to display in the console.
   static int maxLines = 20000;
+
+  /// Current index in search results.
   static int currentSearchIndex = 0;
+
+  /// Total number of search results.
   static int searchResultsLength = 0;
+
+  /// Controller for scrolling the list of logs.
   static final ItemScrollController itemScrollController =
       ItemScrollController();
+
+  /// Listener for item positions in the scrollable list.
   static ItemPositionsListener itemPositionsListener =
       ItemPositionsListener.create();
 
+/// Global key for the navigator state.
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
+  /// Clears logs based on specified log types or all logs if no types are specified.
+  /// Resets search-related properties and reapplies filters if necessary.
   static void clear() {
     try {
       if (logTypes.isEmpty || logTypes.contains(null)) {
@@ -227,6 +297,7 @@ class OmConsole {
     }
   }
 
+  /// Scrolls the console to the bottom.
   static void scrollToBottomMethod() {
     try {
       OmConsole.itemScrollController.scrollTo(
@@ -234,10 +305,11 @@ class OmConsole {
         duration: const Duration(milliseconds: 100),
       );
     } catch (e) {
-      //
+      // Error handling omitted
     }
   }
 
+  /// Processes logs for search functionality, splitting long messages and updating search results.
   static void searchPaging() {
     try {
       String searchText = searchConroller.text.toLowerCase();
@@ -339,6 +411,10 @@ class OmConsole {
     }
   }
 
+  /// Navigates through search results in the console logs.
+  ///
+  /// [forward] moves to the next search result if true.
+  /// [back] moves to the previous search result if true.
   static void lineNavigate({
     bool forward = false,
     bool back = false,
@@ -396,6 +472,13 @@ class OmConsole {
     }
   }
 
+  /// Generates an SQL query string for a stored procedure call.
+  ///
+  /// [dbName] is the name of the database.
+  /// [spName] is the name of the stored procedure.
+  /// [params] is a map of parameter names and values for the stored procedure.
+  ///
+  /// Returns a formatted SQL query string.
   static String generateSqlQuery(
       String dbName, String spName, Map<String, dynamic> params) {
     // Start building the SQL query
@@ -441,6 +524,13 @@ class OmConsole {
     return sqlQuery.toString();
   }
 
+  /// Generates a cURL command string for an HTTP request with JSON data.
+  ///
+  /// [url] is the target URL for the request.
+  /// [headers] is a map of HTTP headers to include in the request.
+  /// [jsonData] is the data to be sent as JSON in the request body.
+  ///
+  /// Returns a formatted cURL command string.
   static String generateCurlCommandWithJson(
       String url, Map<String, dynamic> headers, Map<String, dynamic> jsonData) {
     // Start building the curl command
@@ -460,6 +550,9 @@ class OmConsole {
     return curlCommand;
   }
 
+  /// Filters and updates the console logs based on selected log types and search text.
+  ///
+  /// [text] is the search text to filter logs by.
   static void filterWithTags(String text) {
     try {
       currentSearchScrollIndex = 0;
@@ -485,6 +578,9 @@ class OmConsole {
     }
   }
 
+  /// Limits the total number of lines in the console logs.
+  ///
+  /// [textStyle] is the TextStyle used for calculating line heights.
   static void limitTotalLines({required TextStyle textStyle}) {
     List<Log> limitedLogs = [];
     int totalLines = 0;
@@ -537,21 +633,51 @@ class OmConsole {
   }
 }
 
+/// Represents a log entry in the console.
 class Log {
-  int id;
-  String message;
-  LogType type;
-  Color textColor;
-  Color backgroundColor;
-  String method;
-  String url;
-  int statusCode;
-  String headers;
-  String body;
-  String? response;
-  bool expandRes;
-  String curlCommand;
+  /// Unique identifier for the log entry.
+  final int id;
 
+  /// The main content of the log message.
+  final String message;
+
+  /// The type of the log entry (e.g., normal, error, http).
+  final LogType type;
+
+  /// The color of the log text.
+  final Color textColor;
+
+  /// The background color of the log entry.
+  final Color backgroundColor;
+
+  /// The HTTP method (for HTTP log types).
+  final String method;
+
+  /// The URL (for HTTP log types).
+  final String url;
+
+  /// The HTTP status code (for HTTP log types).
+  final int statusCode;
+
+  /// The HTTP headers (for HTTP log types).
+  final String headers;
+
+  /// The HTTP request body (for HTTP log types).
+  final String body;
+
+  /// The HTTP response (for HTTP log types).
+  final String? response;
+
+  /// Whether the response is expanded in the UI.
+  bool expandRes;
+
+  /// The cURL command equivalent of the HTTP request.
+  final String curlCommand;
+
+  /// Creates a new Log instance.
+  ///
+  /// The [message], [id], [type], and [textColor] are required.
+  /// Other parameters are optional and have default values.
   Log(
     this.message, {
     required this.id,
@@ -569,4 +695,20 @@ class Log {
   });
 }
 
-enum LogType { normal, error, http, logs, sql }
+/// Defines the types of log entries.
+enum LogType {
+  /// Normal log entry.
+  normal,
+
+  /// Error log entry.
+  error,
+
+  /// HTTP request/response log entry.
+  http,
+
+  /// General logs entry.
+  logs,
+
+  /// SQL query log entry.
+  sql
+}
