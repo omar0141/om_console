@@ -185,6 +185,8 @@ class OmConsole {
   static bool showConsole = true;
   static bool scrollToBottom = false;
   static int maxLines = 20000;
+  static int currentSearchIndex = 0;
+  static int searchResultsLength = 0;
   static final ItemScrollController itemScrollController =
       ItemScrollController();
   static ItemPositionsListener itemPositionsListener =
@@ -219,18 +221,32 @@ class OmConsole {
 
   static void searchPaging() {
     try {
-      String text = searchConroller.text;
-      List<Log> splitLogs = [];
+      String searchText = searchConroller.text.toLowerCase();
+      List<Log> processedLogs = [];
       TextStyle textStyle = const TextStyle(fontSize: 16);
       double maxWidth =
           MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
 
-      // Split logs using TextPainter
       for (Log originalLog in logs.value) {
-        if (originalLog.type == LogType.http ||
-            originalLog.type == LogType.sql) {
-          splitLogs.add(originalLog);
+        bool shouldSplit = false;
+
+        if (originalLog.type == LogType.http) {
+          shouldSplit = originalLog.statusCode
+                  .toString()
+                  .toLowerCase()
+                  .contains(searchText) ||
+              originalLog.url.toLowerCase().contains(searchText) ||
+              originalLog.method.toLowerCase().contains(searchText) ||
+              originalLog.headers.toLowerCase().contains(searchText) ||
+              originalLog.body.toLowerCase().contains(searchText) ||
+              (originalLog.response ?? "").toLowerCase().contains(searchText);
         } else {
+          shouldSplit = originalLog.message.toLowerCase().contains(searchText);
+        }
+
+        if (shouldSplit &&
+            originalLog.type != LogType.http &&
+            originalLog.type != LogType.sql) {
           final textSpan = TextSpan(
             text: originalLog.message,
             style: textStyle,
@@ -265,7 +281,7 @@ class OmConsole {
             lastOffset = endPosition.offset;
 
             if (lineText.isNotEmpty) {
-              splitLogs.add(Log(
+              processedLogs.add(Log(
                 lineText,
                 id: originalLog.id * 1000 + i,
                 type: originalLog.type,
@@ -274,30 +290,27 @@ class OmConsole {
               ));
             }
           }
+        } else {
+          // If not splitting, add the original log
+          processedLogs.add(originalLog);
         }
       }
 
-      // Update logs.value with split logs
-      logs.value = splitLogs;
-
-      // Perform search on split logs
-      if (text.isNotEmpty) {
-        logs.value.where((log) {
-          if (log.type == LogType.http) {
-            return log.statusCode
-                    .toString()
-                    .toLowerCase()
-                    .contains(text.toLowerCase()) ||
-                log.url.toLowerCase().contains(text.toLowerCase()) ||
-                log.method.toLowerCase().contains(text.toLowerCase()) ||
-                log.headers.toLowerCase().contains(text.toLowerCase()) ||
-                log.body.toLowerCase().contains(text.toLowerCase()) ||
-                (log.response ?? "").toLowerCase().contains(text.toLowerCase());
-          } else {
-            return log.message.toLowerCase().contains(text.toLowerCase());
-          }
-        }).toList();
-      }
+      // Update logs.value with processed logs
+      logs.value = processedLogs;
+      searchResultsLength = logs.value.where((log) {
+        if (log.type == LogType.http) {
+          return log.statusCode.toString().toLowerCase().contains(searchText) ||
+              log.url.toLowerCase().contains(searchText) ||
+              log.method.toLowerCase().contains(searchText) ||
+              log.headers.toLowerCase().contains(searchText) ||
+              log.body.toLowerCase().contains(searchText) ||
+              (log.response ?? "").toLowerCase().contains(searchText);
+        } else {
+          return log.message.toLowerCase().contains(searchText);
+        }
+      }).length;
+      currentSearchIndex = 0;
       lineNavigate();
       // Notify listeners of the change
       // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
@@ -313,21 +326,46 @@ class OmConsole {
   }) {
     if (logs.value.isEmpty || searchConroller.text.isEmpty) {
       currentSearch = null;
-      currentSearchScrollIndex = 0;
+      currentSearchIndex = 0;
+      searchResultsLength = 0;
+      return;
+    }
+
+    String searchText = searchConroller.text.toLowerCase();
+    List<Log> matchingLogs = logs.value.where((log) {
+      if (log.type == LogType.http) {
+        return log.statusCode.toString().toLowerCase().contains(searchText) ||
+            log.url.toLowerCase().contains(searchText) ||
+            log.method.toLowerCase().contains(searchText) ||
+            log.headers.toLowerCase().contains(searchText) ||
+            log.body.toLowerCase().contains(searchText) ||
+            (log.response ?? "").toLowerCase().contains(searchText);
+      } else {
+        return log.message.toLowerCase().contains(searchText);
+      }
+    }).toList();
+
+    searchResultsLength = matchingLogs.length;
+
+    if (matchingLogs.isEmpty) {
+      currentSearch = null;
+      currentSearchIndex = 0;
       return;
     }
 
     if (forward) {
-      currentSearchScrollIndex += 1;
-      if (currentSearchScrollIndex > logs.value.length - 1) {
-        currentSearchScrollIndex = logs.value.length - 1;
+      currentSearchIndex += 1;
+      if (currentSearchIndex >= searchResultsLength) {
+        currentSearchIndex = 0; // Wrap around to the beginning
       }
     } else if (back) {
-      currentSearchScrollIndex -= 1;
-      if (currentSearchScrollIndex < 0) currentSearchScrollIndex = 0;
+      currentSearchIndex -= 1;
+      if (currentSearchIndex < 0) {
+        currentSearchIndex = searchResultsLength - 1; // Wrap around to the end
+      }
     }
 
-    currentSearch = logs.value[currentSearchScrollIndex];
+    currentSearch = matchingLogs[currentSearchIndex];
     int index = logs.value.indexWhere((e) => currentSearch!.id == e.id);
 
     if (index >= 0) {
@@ -427,8 +465,7 @@ class OmConsole {
         logs.value =
             orgLogs.where((log) => logTypes.contains(log.type)).toList();
       }
-      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-      logs.notifyListeners();
+      searchPaging();
     } catch (e) {
       // print(e.toString());
     }
