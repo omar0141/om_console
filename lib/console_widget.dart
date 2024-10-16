@@ -36,10 +36,10 @@ class ConsoleWidget extends StatefulWidget {
 class _ConsoleWidgetState extends State<ConsoleWidget>
     with WidgetsBindingObserver {
   double? orgScreenHeight;
-  double orgConsoleHeight = 30;
+  double orgConsoleHeight = 35;
   double? screenHeight;
-  double consoleHeight = 30;
-  double screenWidth = 30;
+  double consoleHeight = 35;
+  double screenWidth = 0;
   double _lastConsoleHeight = 300;
   bool expandedConsole = false;
   bool copied = false;
@@ -140,7 +140,11 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                 onVerticalDragUpdate: (details) {
                   setState(() {
                     consoleHeight = (consoleHeight - details.primaryDelta!)
-                        .clamp(orgConsoleHeight, (orgScreenHeight ?? 0));
+                        .clamp(
+                            screenWidth <= 800
+                                ? (orgConsoleHeight + 50)
+                                : (orgConsoleHeight + 10),
+                            (orgScreenHeight ?? 0));
                     screenHeight = (orgScreenHeight ?? 0) -
                         consoleHeight +
                         orgConsoleHeight;
@@ -151,11 +155,11 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                   cursor: SystemMouseCursors.resizeRow,
                   child: Container(
                     color: const Color.fromARGB(255, 82, 82, 82),
-                    child: const Center(
+                    child: Center(
                         child: Icon(
                       Icons.drag_handle,
                       color: Colors.white,
-                      size: 10,
+                      size: screenWidth <= 800 ? 15 : 10,
                     )),
                   ),
                 ),
@@ -239,7 +243,7 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
     return Row(
       children: [
         SizedBox(
-          width: 250,
+          width: 225,
           child: TextField(
             controller: OmConsole.searchConroller,
             style: const TextStyle(
@@ -251,15 +255,19 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
               OmConsole.searchPaging();
               setState(() {});
             },
-            decoration: const InputDecoration(
-                fillColor: Color.fromARGB(255, 117, 117, 117),
+            decoration: InputDecoration(
+                fillColor: const Color.fromARGB(255, 117, 117, 117),
                 filled: true,
-                contentPadding: EdgeInsets.all(5),
+                contentPadding: const EdgeInsets.all(5),
                 isDense: true,
                 hintText: "Search...",
                 border: InputBorder.none,
-                hintStyle:
-                    TextStyle(color: Color.fromARGB(255, 199, 199, 199))),
+                hintStyle: const TextStyle(
+                  color: Color.fromARGB(255, 199, 199, 199),
+                ),
+                suffix: Text(
+                  "${OmConsole.searchResultsLength == 0 ? 0 : OmConsole.currentSearchIndex + 1} of ${OmConsole.searchResultsLength}",
+                )),
           ),
         ),
         const SizedBox(width: 5),
@@ -455,20 +463,25 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                       fontWeight: FontWeight.normal,
                     ),
                   ),
-                  SubstringHighlight(
-                    text: "(${log.url})",
-                    term: OmConsole.searchConroller.text,
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 81, 132, 173),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textStyleHighlight: const TextStyle(
-                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                      fontSize: 16,
-                      fontWeight: FontWeight.normal,
+                  Expanded(
+                    child: SubstringHighlight(
+                      text: "(${log.url})",
+                      term: OmConsole.searchConroller.text,
+                      textStyle: const TextStyle(
+                        color: Color.fromARGB(255, 81, 132, 173),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textStyleHighlight: const TextStyle(
+                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 40),
                 ],
               ),
               const Divider(color: Colors.black, thickness: 0.2),
@@ -604,6 +617,7 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
           }
         },
         child: Container(
+          padding: const EdgeInsets.only(bottom: 3),
           decoration: expandedConsole && OmConsole.logTypes.contains(logType)
               ? const BoxDecoration(
                   border: Border(
