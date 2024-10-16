@@ -1,39 +1,63 @@
 import 'package:flutter/material.dart';
 
-final int __int64MaxValue = double.maxFinite.toInt();
-
+/// Widget that renders a string with first occurrence sub-string highlighting.
 /// Widget that renders a string with first occurrence sub-string highlighting.
 class SubstringHighlight extends StatelessWidget {
-  const SubstringHighlight(
-      {Key? key,
-      this.caseSensitive = false,
-      this.maxLines,
-      this.overflow = TextOverflow.clip,
-      this.term,
-      this.terms,
-      required this.text,
-      this.textAlign = TextAlign.left,
-      this.textStyle = const TextStyle(
-        color: Colors.black,
-      ),
-      this.textStyleHighlight = const TextStyle(
-        color: Colors.red,
-      ),
-      this.wordDelimiters = ' .,;?!<>[]~`@#\$%^&*()+-=|/_',
-      this.words = false})
-      : assert(term != null || terms != null),
+  /// Creates a SubstringHighlight widget.
+  ///
+  /// The [text] parameter is required and represents the text to be displayed.
+  /// Either [term] or [terms] must be provided for highlighting.
+  const SubstringHighlight({
+    Key? key,
+    this.caseSensitive = false,
+    this.maxLines,
+    this.overflow = TextOverflow.clip,
+    this.term,
+    this.terms,
+    required this.text,
+    this.textAlign = TextAlign.left,
+    this.textStyle = const TextStyle(
+      color: Colors.black,
+    ),
+    this.textStyleHighlight = const TextStyle(
+      color: Colors.red,
+    ),
+    this.wordDelimiters = ' .,;?!<>[]~`@#\$%^&*()+-=|/_',
+    this.words = false,
+  })  : assert(term != null || terms != null),
         super(key: key);
 
+  /// Whether the search should be case-sensitive.
   final bool caseSensitive;
+
+  /// How visual overflow should be handled.
   final TextOverflow overflow;
+
+  /// An optional maximum number of lines for the text to span, wrapping if necessary.
   final int? maxLines;
+
+  /// A single term to search for within the text.
   final String? term;
+
+  /// A list of terms to search for within the text.
   final List<String>? terms;
+
+  /// The text to be displayed and searched.
   final String text;
+
+  /// How the text should be aligned horizontally.
   final TextAlign textAlign;
+
+  /// The style to use for non-highlighted text.
   final TextStyle textStyle;
+
+  /// The style to use for highlighted text.
   final TextStyle textStyleHighlight;
+
+  /// The set of characters that are used as word boundaries.
   final String wordDelimiters;
+
+  /// Whether to match only whole words.
   final bool words;
 
   @override
