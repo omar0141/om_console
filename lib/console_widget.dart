@@ -5,8 +5,12 @@ import 'om_console.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
 import 'substring_higlight.dart';
+
+/// A widget that displays console output in the UI.
+///
+/// The [ConsoleWidget] allows developers to render log messages and other
+/// textual output in a scrollable format with a maximum number of displayable lines.
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -25,8 +29,15 @@ class ConsoleWidget extends StatefulWidget {
     this.maxLines = 200,
   }) : super(key: key);
 
+  /// The widget to display inside the console area.
+  ///
+  /// This is typically a [Text] or other widget that renders the console output.
   final Widget child;
   final bool showConsole;
+
+  /// The maximum number of lines to display in the console output.
+  ///
+  /// The console will display up to [maxLines] lines before truncating.
   final int maxLines;
 
   @override
