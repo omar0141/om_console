@@ -7,11 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'substring_higlight.dart';
 
-/// A widget that displays console output in the UI.
-///
-/// The [ConsoleWidget] allows developers to render log messages and other
-/// textual output in a scrollable format with a maximum number of displayable lines.
-
+/// Custom scroll behavior that allows both touch and mouse dragging.
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
@@ -21,7 +17,16 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
 }
 
 // ignore: must_be_immutable
+/// A widget that displays console output in the UI.
+///
+/// The [ConsoleWidget] allows developers to render log messages and other
+/// textual output in a scrollable format with a maximum number of displayable lines.
 class ConsoleWidget extends StatefulWidget {
+  /// Creates a [ConsoleWidget].
+  ///
+  /// The [child] parameter is required and specifies the widget to display inside the console area.
+  /// The [showConsole] parameter determines whether the console is visible.
+  /// The [maxLines] parameter sets the maximum number of lines to display in the console output.
   const ConsoleWidget({
     Key? key,
     required this.child,
@@ -33,6 +38,8 @@ class ConsoleWidget extends StatefulWidget {
   ///
   /// This is typically a [Text] or other widget that renders the console output.
   final Widget child;
+
+  /// Determines whether the console is visible.
   final bool showConsole;
 
   /// The maximum number of lines to display in the console output.
@@ -664,9 +671,18 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
   }
 }
 
+/// A widget that allows copying text to the clipboard.
+///
+/// This widget displays an icon that, when tapped, copies the provided [text]
+/// to the clipboard and shows a brief visual confirmation.
 class CopyWidget extends StatefulWidget {
+  /// Creates a [CopyWidget].
+  ///
+  /// The [text] parameter is required and specifies the text to be copied
+  /// when the widget is tapped.
   const CopyWidget({Key? key, required this.text}) : super(key: key);
 
+  /// The text to be copied to the clipboard when the widget is tapped.
   final String text;
 
   @override
