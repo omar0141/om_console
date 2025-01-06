@@ -133,16 +133,18 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 locale: const Locale("en"),
-                home: SizedBox(
-                  height: consoleHeight,
-                  child: Scaffold(
-                    body: Container(
-                      color: const Color.fromARGB(255, 37, 37, 37),
-                      child: Column(children: [
-                        if (expandedConsole) const SizedBox(height: 10),
-                        consoleHeader(),
-                        if (expandedConsole) consoleBody(),
-                      ]),
+                home: SafeArea(
+                  child: SizedBox(
+                    height: consoleHeight,
+                    child: Scaffold(
+                      body: Container(
+                        color: const Color.fromARGB(255, 37, 37, 37),
+                        child: Column(children: [
+                          if (expandedConsole) const SizedBox(height: 10),
+                          consoleHeader(),
+                          if (expandedConsole) consoleBody(),
+                        ]),
+                      ),
                     ),
                   ),
                 ),
@@ -234,7 +236,7 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
           boxShadow: [
             BoxShadow(
               offset: const Offset(0, 0),
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withAlpha((0.5 * 255).toInt()),
               blurRadius: 5,
             )
           ]),
