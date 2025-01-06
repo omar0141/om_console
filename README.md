@@ -115,11 +115,6 @@ The `ConsoleWrapper` method supports the following properties:
 - `showConsole`: Boolean to toggle console visibility.
 - `maxLines`: Integer to set the maximum number of rendered console lines, optimizing performance for large logs.
 
-## Limitations and Future Improvements
-
-- HTTP requests can only be copied as raw data. Support for copying as form data is planned for future releases.
-- Search functionality in HTTP requests is still under development.
-
 ## Contributing
 
 We welcome contributions to Om Console! Please submit issues and pull requests on our GitHub repository.
