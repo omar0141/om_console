@@ -133,18 +133,16 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 locale: const Locale("en"),
-                home: SafeArea(
-                  child: SizedBox(
-                    height: consoleHeight,
-                    child: Scaffold(
-                      body: Container(
-                        color: const Color.fromARGB(255, 37, 37, 37),
-                        child: Column(children: [
-                          if (expandedConsole) const SizedBox(height: 10),
-                          consoleHeader(),
-                          if (expandedConsole) consoleBody(),
-                        ]),
-                      ),
+                home: SizedBox(
+                  height: consoleHeight,
+                  child: Scaffold(
+                    body: Container(
+                      color: const Color.fromARGB(255, 37, 37, 37),
+                      child: Column(children: [
+                        if (expandedConsole) const SizedBox(height: 10),
+                        consoleHeader(),
+                        if (expandedConsole) consoleBody(),
+                      ]),
                     ),
                   ),
                 ),
