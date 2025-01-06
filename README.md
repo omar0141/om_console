@@ -94,12 +94,19 @@ Console.logHttp(
   body: data,
   statusCode: responseBody["status"] ?? 500,
   response: responseBody,
+  bodyType: BodyType.raw, // Specify how the body should be formatted in curl
   textColor: Colors.black,
   backgroundColor: responseBody["status"] == 200
       ? const Color.fromARGB(255, 207, 223, 190)
       : Color.fromARGB(255, 223, 190, 190)
 );
 ```
+
+The `bodyType` parameter determines how the request body is formatted in the generated curl command:
+
+- `BodyType.formData`: Formats the body as multipart form data
+- `BodyType.xWwwFormUrlencoded`: Formats the body as x-www-form-urlencoded
+- `BodyType.raw`: Formats the body as raw data (default)
 
 ## Configuration
 
