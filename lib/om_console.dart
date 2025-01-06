@@ -147,6 +147,7 @@ class Console {
     Color backgroundColor = const Color.fromARGB(255, 207, 223, 190),
     required int statusCode,
     required Map<String, dynamic> response,
+    BodyType bodyType = BodyType.raw,
   }) {
     if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -170,8 +171,12 @@ class Console {
           backgroundColor: backgroundColor,
           id: lastId,
           type: LogType.http,
-          curlCommand:
-              OmConsole.generateCurlCommandWithJson(url, headers, body),
+          curlCommand: OmConsole.generateCurlCommandWithJson(
+            url,
+            headers,
+            body,
+            bodyType: bodyType,
+          ),
         );
         OmConsole.orgLogs.add(logHttp);
         OmConsole.logs.value.add(logHttp);
@@ -532,7 +537,11 @@ class OmConsole {
   ///
   /// Returns a formatted cURL command string.
   static String generateCurlCommandWithJson(
-      String url, Map<String, dynamic> headers, Map<String, dynamic> jsonData) {
+    String url,
+    Map<String, dynamic> headers,
+    Map<String, dynamic> bodyData, {
+    BodyType bodyType = BodyType.raw,
+  }) {
     // Start building the curl command
     String curlCommand = "curl --location '$url' \\\n";
 
@@ -541,11 +550,31 @@ class OmConsole {
       curlCommand += "--header '$key: $value' \\\n";
     });
 
-    // Convert the Map to a pretty-printed JSON string
-    String jsonString = jsonEncode(jsonData);
+    // Add the data payload to the command based on the body type
+    switch (bodyType) {
+      case BodyType.formData:
+        bodyData.forEach((key, value) {
+          curlCommand += "--form '$key=$value' \\\n";
+        });
+        break;
+      case BodyType.xWwwFormUrlencoded:
+        String formUrlEncoded = bodyData.entries
+            .map((entry) =>
+                '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}')
+            .join('&');
+        curlCommand += "--data '$formUrlEncoded' \\\n";
+        break;
+      case BodyType.raw:
+        curlCommand += "--data-raw '$bodyData' \\\n";
+        break;
+      default: // BodyType.json
+        String jsonString = jsonEncode(bodyData);
+        curlCommand += "--data '$jsonString' \\\n";
+        break;
+    }
 
-    // Add the data payload to the command
-    curlCommand += "--data '$jsonString'";
+    // Remove the trailing backslash and newline
+    curlCommand = curlCommand.trimRight().replaceAll(RegExp(r'\\\n$'), '');
 
     return curlCommand;
   }
@@ -711,4 +740,16 @@ enum LogType {
 
   /// SQL query log entry.
   sql
+}
+
+/// Defines the types of request bodies.
+enum BodyType {
+  /// Form data body type.
+  formData,
+
+  /// x-www-form-urlencoded body type.
+  xWwwFormUrlencoded,
+
+  /// Raw body type.
+  raw,
 }
