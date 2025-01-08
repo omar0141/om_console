@@ -565,7 +565,8 @@ class OmConsole {
         curlCommand += "--data '$formUrlEncoded' \\\n";
         break;
       case BodyType.raw:
-        curlCommand += "--data-raw '$bodyData' \\\n";
+        String jsonString = jsonEncode(bodyData);
+        curlCommand += "--data '$jsonString' \\\n";
         break;
       default: // BodyType.json
         String jsonString = jsonEncode(bodyData);
