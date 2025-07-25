@@ -15,11 +15,19 @@ class ConsoleWrapper extends StatelessWidget {
   /// The [child] parameter is required and represents the widget to be wrapped.
   /// [showConsole] determines whether the console should be displayed.
   /// [maxLines] sets the maximum number of lines in the console.
+  /// [normalLogFontSize] sets the font size for normal log messages.
+  /// [httpLogFontSize] sets the font size for HTTP log messages.
+  /// [sqlLogFontSize] sets the font size for SQL log messages.
+  /// [searchBoxFontSize] sets the font size for the search box.
   const ConsoleWrapper({
     Key? key,
     required this.child,
     this.showConsole = true,
     this.maxLines = 200,
+    this.normalLogFontSize = 16,
+    this.httpLogFontSize = 14,
+    this.sqlLogFontSize = 14,
+    this.searchBoxFontSize = 13,
   }) : super(key: key);
 
   /// The widget to be wrapped by the console.
@@ -31,11 +39,35 @@ class ConsoleWrapper extends StatelessWidget {
   /// The maximum number of lines to display in the console.
   final int maxLines;
 
+  /// The font size for normal log messages.
+  ///
+  /// Default value is 16.
+  final double normalLogFontSize;
+
+  /// The font size for HTTP log messages.
+  ///
+  /// Default value is 14.
+  final double httpLogFontSize;
+
+  /// The font size for SQL log messages.
+  ///
+  /// Default value is 14.
+  final double sqlLogFontSize;
+
+  /// The font size for the search box.
+  ///
+  /// Default value is 13.
+  final double searchBoxFontSize;
+
   @override
   Widget build(BuildContext context) {
     return ConsoleWidget(
       showConsole: showConsole,
       maxLines: maxLines,
+      normalLogFontSize: normalLogFontSize,
+      httpLogFontSize: httpLogFontSize,
+      sqlLogFontSize: sqlLogFontSize,
+      searchBoxFontSize: searchBoxFontSize,
       child: child,
     );
   }
@@ -56,8 +88,7 @@ class Console {
     if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
-        int lastId =
-            (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
+        int lastId = (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
         Log logData = Log(
           "$message",
           type: type,
@@ -101,8 +132,7 @@ class Console {
     if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
-        int lastId =
-            (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
+        int lastId = (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
         Log logSql = Log(
           OmConsole.generateSqlQuery(dbName, spName, params),
           textColor: textColor,
@@ -152,10 +182,8 @@ class Console {
     if (OmConsole.showConsole == false) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
-        int lastId =
-            (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
-        String prettyResponse =
-            const JsonEncoder.withIndent('  ').convert(response);
+        int lastId = (OmConsole.orgLogs.isEmpty ? 0 : OmConsole.orgLogs.last.id) + 1;
+        String prettyResponse = const JsonEncoder.withIndent('  ').convert(response);
         if (prettyResponse.length > 300) {
           prettyResponse = prettyResponse.substring(0, 300);
         }
@@ -257,16 +285,13 @@ class OmConsole {
   static int searchResultsLength = 0;
 
   /// Controller for scrolling the list of logs.
-  static final ItemScrollController itemScrollController =
-      ItemScrollController();
+  static final ItemScrollController itemScrollController = ItemScrollController();
 
   /// Listener for item positions in the scrollable list.
-  static ItemPositionsListener itemPositionsListener =
-      ItemPositionsListener.create();
+  static ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
 
   /// Global key for the navigator state.
-  static final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   /// Clears logs based on specified log types or all logs if no types are specified.
   /// Resets search-related properties and reapplies filters if necessary.
@@ -320,17 +345,13 @@ class OmConsole {
       String searchText = searchConroller.text.toLowerCase();
       List<Log> processedLogs = [];
       TextStyle textStyle = const TextStyle(fontSize: 16);
-      double maxWidth =
-          MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
+      double maxWidth = MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
 
       for (Log originalLog in logs.value) {
         bool shouldSplit = false;
 
         if (originalLog.type == LogType.http) {
-          shouldSplit = originalLog.statusCode
-                  .toString()
-                  .toLowerCase()
-                  .contains(searchText) ||
+          shouldSplit = originalLog.statusCode.toString().toLowerCase().contains(searchText) ||
               originalLog.url.toLowerCase().contains(searchText) ||
               originalLog.method.toLowerCase().contains(searchText) ||
               originalLog.headers.toLowerCase().contains(searchText) ||
@@ -340,9 +361,7 @@ class OmConsole {
           shouldSplit = originalLog.message.toLowerCase().contains(searchText);
         }
 
-        if (shouldSplit &&
-            originalLog.type != LogType.http &&
-            originalLog.type != LogType.sql) {
+        if (shouldSplit && originalLog.type != LogType.http && originalLog.type != LogType.sql) {
           final textSpan = TextSpan(
             text: originalLog.message,
             style: textStyle,
@@ -369,9 +388,7 @@ class OmConsole {
               // Last line
               lineText = remainingText.substring(lastOffset).trim();
             } else {
-              lineText = remainingText
-                  .substring(lastOffset, endPosition.offset)
-                  .trim();
+              lineText = remainingText.substring(lastOffset, endPosition.offset).trim();
             }
 
             lastOffset = endPosition.offset;
@@ -484,8 +501,7 @@ class OmConsole {
   /// [params] is a map of parameter names and values for the stored procedure.
   ///
   /// Returns a formatted SQL query string.
-  static String generateSqlQuery(
-      String dbName, String spName, Map<String, dynamic> params) {
+  static String generateSqlQuery(String dbName, String spName, Map<String, dynamic> params) {
     // Start building the SQL query
     StringBuffer sqlQuery = StringBuffer();
 
@@ -508,9 +524,7 @@ class OmConsole {
     // Add parameters
     List<String> paramStrings = [];
     params.forEach((key, value) {
-      String paramValue = value is String
-          ? "N'${value.replaceAll("'", "''")}'"
-          : value.toString();
+      String paramValue = value is String ? "N'${value.replaceAll("'", "''")}'" : value.toString();
       paramStrings.add("@$key = $paramValue");
     });
 
@@ -559,8 +573,8 @@ class OmConsole {
         break;
       case BodyType.xWwwFormUrlencoded:
         String formUrlEncoded = bodyData.entries
-            .map((entry) =>
-                '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}')
+            .map(
+                (entry) => '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}')
             .join('&');
         curlCommand += "--data '$formUrlEncoded' \\\n";
         break;
@@ -589,8 +603,7 @@ class OmConsole {
       if (logTypes.isEmpty || logTypes.contains(null)) {
         logs.value = List.from(orgLogs); // Create a new list from orgLogs
       } else {
-        logs.value =
-            orgLogs.where((log) => logTypes.contains(log.type)).toList();
+        logs.value = orgLogs.where((log) => logTypes.contains(log.type)).toList();
       }
       if (text.isNotEmpty) {
         searchPaging();
@@ -614,8 +627,7 @@ class OmConsole {
   static void limitTotalLines({required TextStyle textStyle}) {
     List<Log> limitedLogs = [];
     int totalLines = 0;
-    double maxWidth =
-        MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
+    double maxWidth = MediaQuery.of(navigatorKey.currentContext!).size.width - 70;
 
     // First pass: Only count the lines of non-HTTP logs
     for (int i = orgLogs.length - 1; i >= 0; i--) {
@@ -629,8 +641,7 @@ class OmConsole {
           maxLines: null,
         );
         textPainter.layout(maxWidth: maxWidth);
-        final logLines =
-            (textPainter.height / textPainter.preferredLineHeight).ceil();
+        final logLines = (textPainter.height / textPainter.preferredLineHeight).ceil();
 
         if (totalLines + logLines <= maxLines) {
           limitedLogs.insert(0, log); // Add each log as its own entry
@@ -646,15 +657,13 @@ class OmConsole {
       Log log = orgLogs[i];
 
       if (log.type == LogType.http || log.type == LogType.sql) {
-        limitedLogs.insert(
-            0, log); // Insert HTTP logs without altering line count
+        limitedLogs.insert(0, log); // Insert HTTP logs without altering line count
       }
     }
 
     // Replace the orgLogs with the properly limited logs
     orgLogs.clear();
-    orgLogs
-        .addAll(limitedLogs); // Ensure each log is added as an individual item
+    orgLogs.addAll(limitedLogs); // Ensure each log is added as an individual item
 
     // Notify listeners after updating the logs list
     OmConsole.logs.value = List.from(limitedLogs); // Rebuild the value

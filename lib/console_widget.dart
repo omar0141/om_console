@@ -27,11 +27,19 @@ class ConsoleWidget extends StatefulWidget {
   /// The [child] parameter is required and specifies the widget to display inside the console area.
   /// The [showConsole] parameter determines whether the console is visible.
   /// The [maxLines] parameter sets the maximum number of lines to display in the console output.
+  /// The [normalLogFontSize] parameter sets the font size for normal log messages.
+  /// The [httpLogFontSize] parameter sets the font size for HTTP log messages.
+  /// The [sqlLogFontSize] parameter sets the font size for SQL log messages.
+  /// The [searchBoxFontSize] parameter sets the font size for the search box.
   const ConsoleWidget({
     Key? key,
     required this.child,
     this.showConsole = true,
     this.maxLines = 200,
+    this.normalLogFontSize = 16,
+    this.httpLogFontSize = 14,
+    this.sqlLogFontSize = 14,
+    this.searchBoxFontSize = 13,
   }) : super(key: key);
 
   /// The widget to display inside the console area.
@@ -47,12 +55,31 @@ class ConsoleWidget extends StatefulWidget {
   /// The console will display up to [maxLines] lines before truncating.
   final int maxLines;
 
+  /// The font size for normal log messages.
+  ///
+  /// Default value is 16.
+  final double normalLogFontSize;
+
+  /// The font size for HTTP log messages.
+  ///
+  /// Default value is 14.
+  final double httpLogFontSize;
+
+  /// The font size for SQL log messages.
+  ///
+  /// Default value is 14.
+  final double sqlLogFontSize;
+
+  /// The font size for the search box.
+  ///
+  /// Default value is 13.
+  final double searchBoxFontSize;
+
   @override
   State<ConsoleWidget> createState() => _ConsoleWidgetState();
 }
 
-class _ConsoleWidgetState extends State<ConsoleWidget>
-    with WidgetsBindingObserver {
+class _ConsoleWidgetState extends State<ConsoleWidget> with WidgetsBindingObserver {
   double? orgScreenHeight;
   double orgConsoleHeight = 35;
   double? screenHeight;
@@ -66,9 +93,8 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
   @override
   void didChangeDependencies() {
     screenWidth = MediaQuery.of(context).size.width;
-    orgScreenHeight = MediaQuery.of(context).size.height -
-        orgConsoleHeight -
-        MediaQuery.of(context).padding.bottom;
+    orgScreenHeight =
+        MediaQuery.of(context).size.height - orgConsoleHeight - MediaQuery.of(context).padding.bottom;
     screenHeight = orgScreenHeight;
     super.didChangeDependencies();
   }
@@ -157,15 +183,10 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
               child: GestureDetector(
                 onVerticalDragUpdate: (details) {
                   setState(() {
-                    consoleHeight = (consoleHeight - details.primaryDelta!)
-                        .clamp(
-                            screenWidth <= 800
-                                ? (orgConsoleHeight + 50)
-                                : (orgConsoleHeight + 10),
-                            (orgScreenHeight ?? 0));
-                    screenHeight = (orgScreenHeight ?? 0) -
-                        consoleHeight +
-                        orgConsoleHeight;
+                    consoleHeight = (consoleHeight - details.primaryDelta!).clamp(
+                        screenWidth <= 800 ? (orgConsoleHeight + 50) : (orgConsoleHeight + 10),
+                        (orgScreenHeight ?? 0));
+                    screenHeight = (orgScreenHeight ?? 0) - consoleHeight + orgConsoleHeight;
                     _lastConsoleHeight = consoleHeight;
                   });
                 },
@@ -213,9 +234,7 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Icon(
-                        OmConsole.scrollToBottom
-                            ? Icons.arrow_downward
-                            : Icons.arrow_upward,
+                        OmConsole.scrollToBottom ? Icons.arrow_downward : Icons.arrow_upward,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -229,15 +248,13 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
 
   Container consoleHeader() {
     return Container(
-      decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 37, 37, 37),
-          boxShadow: [
-            BoxShadow(
-              offset: const Offset(0, 0),
-              color: Colors.white.withAlpha((0.5 * 255).toInt()),
-              blurRadius: 5,
-            )
-          ]),
+      decoration: BoxDecoration(color: const Color.fromARGB(255, 37, 37, 37), boxShadow: [
+        BoxShadow(
+          offset: const Offset(0, 0),
+          color: Colors.white.withAlpha((0.5 * 255).toInt()),
+          blurRadius: 5,
+        )
+      ]),
       padding: const EdgeInsets.all(5),
       child: screenWidth <= 800
           ? Wrap(
@@ -264,8 +281,8 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
           width: 225,
           child: TextField(
             controller: OmConsole.searchConroller,
-            style: const TextStyle(
-              fontSize: 13,
+            style: TextStyle(
+              fontSize: widget.searchBoxFontSize,
               color: Colors.white,
             ),
             onChanged: (e) {
@@ -420,16 +437,15 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
         term: OmConsole.searchConroller.text,
         textStyleHighlight: TextStyle(
           backgroundColor: const Color.fromARGB(139, 0, 140, 255),
-          fontSize: 16,
+          fontSize: widget.normalLogFontSize,
           color: log.textColor,
           fontWeight: FontWeight.normal,
         ),
         textStyle: TextStyle(
-          fontSize: 16,
+          fontSize: widget.normalLogFontSize,
           color: log.textColor,
-          backgroundColor: OmConsole.currentSearch?.id == log.id
-              ? const Color.fromARGB(255, 128, 180, 129)
-              : null,
+          backgroundColor:
+              OmConsole.currentSearch?.id == log.id ? const Color.fromARGB(255, 128, 180, 129) : null,
         ),
       ),
     );
@@ -456,28 +472,28 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                   SubstringHighlight(
                     text: "${log.statusCode}",
                     term: OmConsole.searchConroller.text,
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 21, 105, 0),
-                      fontSize: 14,
+                    textStyle: TextStyle(
+                      color: const Color.fromARGB(255, 21, 105, 0),
+                      fontSize: widget.httpLogFontSize,
                       fontWeight: FontWeight.w600,
                     ),
-                    textStyleHighlight: const TextStyle(
-                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                      fontSize: 16,
+                    textStyleHighlight: TextStyle(
+                      backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                      fontSize: widget.httpLogFontSize + 2,
                       fontWeight: FontWeight.normal,
                     ),
                   ),
                   SubstringHighlight(
                     text: " ${log.method} ",
                     term: OmConsole.searchConroller.text,
-                    textStyle: const TextStyle(
+                    textStyle: TextStyle(
                       color: Colors.purple,
-                      fontSize: 14,
+                      fontSize: widget.httpLogFontSize,
                       fontWeight: FontWeight.w600,
                     ),
-                    textStyleHighlight: const TextStyle(
-                      backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                      fontSize: 16,
+                    textStyleHighlight: TextStyle(
+                      backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                      fontSize: widget.httpLogFontSize + 2,
                       fontWeight: FontWeight.normal,
                     ),
                   ),
@@ -485,16 +501,16 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                     child: SubstringHighlight(
                       text: "(${log.url})",
                       term: OmConsole.searchConroller.text,
-                      textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 81, 132, 173),
-                        fontSize: 15,
+                      textStyle: TextStyle(
+                        color: const Color.fromARGB(255, 81, 132, 173),
+                        fontSize: widget.httpLogFontSize + 1,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textStyleHighlight: const TextStyle(
-                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                        fontSize: 16,
+                      textStyleHighlight: TextStyle(
+                        backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                        fontSize: widget.httpLogFontSize + 2,
                         fontWeight: FontWeight.normal,
                       ),
                     ),
@@ -508,12 +524,12 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                 term: OmConsole.searchConroller.text,
                 textStyle: TextStyle(
                   color: log.textColor,
-                  fontSize: 12,
+                  fontSize: widget.httpLogFontSize - 2,
                   fontWeight: FontWeight.w600,
                 ),
-                textStyleHighlight: const TextStyle(
-                  backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                  fontSize: 14,
+                textStyleHighlight: TextStyle(
+                  backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                  fontSize: widget.httpLogFontSize,
                   fontWeight: FontWeight.normal,
                 ),
               ),
@@ -523,12 +539,12 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                 term: OmConsole.searchConroller.text,
                 textStyle: TextStyle(
                   color: log.textColor,
-                  fontSize: 14,
+                  fontSize: widget.httpLogFontSize,
                   fontWeight: FontWeight.w600,
                 ),
-                textStyleHighlight: const TextStyle(
-                  backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                  fontSize: 14,
+                textStyleHighlight: TextStyle(
+                  backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                  fontSize: widget.httpLogFontSize,
                   fontWeight: FontWeight.normal,
                 ),
               ),
@@ -546,12 +562,12 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
                       overflow: TextOverflow.ellipsis,
                       textStyle: TextStyle(
                         color: log.textColor,
-                        fontSize: 14,
+                        fontSize: widget.httpLogFontSize,
                         fontWeight: FontWeight.w600,
                       ),
-                      textStyleHighlight: const TextStyle(
-                        backgroundColor: Color.fromARGB(139, 0, 140, 255),
-                        fontSize: 16,
+                      textStyleHighlight: TextStyle(
+                        backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+                        fontSize: widget.httpLogFontSize + 2,
                         fontWeight: FontWeight.normal,
                       ),
                     ));
@@ -587,12 +603,12 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
             term: OmConsole.searchConroller.text,
             textStyle: TextStyle(
               color: log.textColor,
-              fontSize: 14,
+              fontSize: widget.sqlLogFontSize,
               fontWeight: FontWeight.w600,
             ),
-            textStyleHighlight: const TextStyle(
-              backgroundColor: Color.fromARGB(139, 0, 140, 255),
-              fontSize: 14,
+            textStyleHighlight: TextStyle(
+              backgroundColor: const Color.fromARGB(139, 0, 140, 255),
+              fontSize: widget.sqlLogFontSize,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -608,8 +624,7 @@ class _ConsoleWidgetState extends State<ConsoleWidget>
   }
 
   void selectTag(LogType? logType) {
-    if (HardwareKeyboard.instance.logicalKeysPressed
-        .contains(LogicalKeyboardKey.controlLeft)) {
+    if (HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.controlLeft)) {
       if (OmConsole.logTypes.contains(logType)) {
         OmConsole.logTypes.remove(logType);
       } else {
